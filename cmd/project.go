@@ -31,8 +31,9 @@ var projectOutput = &cobra.Command{
 		}
 
 		fileName, _ := cmd.Flags().GetString("FileNames")
+		description, _ := cmd.Flags().GetString("Desc")
 
-		if err := projectRR(myEnv, years, projYears, fileName); err != nil {
+		if err := projectRR(myEnv, years, projYears, fileName, description); err != nil {
 			pterm.Error.Println("Error in Application: ", err)
 		}
 	},
@@ -43,11 +44,13 @@ func init() {
 	projectOutput.Flags().String("Years", "2020", "A list of years to use for the projection, e.g. 2018, 2020, 2018 in that order, surround in double quotes")
 	projectOutput.Flags().String("FileNames", "RR", "The name of the files to use for the projection output")
 	projectOutput.Flags().Int("ProjectYears", 50, "The number of years to project forward")
+	projectOutput.Flags().String("Desc", "Robust Review Analysis", "A description of the project run")
 
 	_ = projectOutput.MarkFlagRequired("Years")
+	_ = projectOutput.MarkFlagRequired("Desc")
 }
 
-func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileName string) error {
+func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileName, description string) error {
 	// load local database
 	_, db, err := DbQuestion()
 	if err != nil {
@@ -111,6 +114,26 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		year = years.NextYear()
 	}
 
+	resultsNote, err := database.ResultsNoteDB(db)
+	if err != nil {
+		return err
+	}
+
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
+		return err
+	}
+
+	_ = resultsNote.Close()
+
 	return nil
 }
 
@@ -158,4 +181,17 @@ func (r *repeatYears) parseAndSetYears(yearsStr string) error {
 	r.yearsList = years
 
 	return nil
+}
+
+func (r *repeatYears) String() string {
+	if len(r.yearsList) == 0 {
+		return ""
+	}
+
+	yearsString := strconv.Itoa(r.yearsList[0])
+	for i := 1; i < len(r.yearsList); i++ {
+		yearsString += ", " + strconv.Itoa(r.yearsList[i])
+	}
+
+	return yearsString
 }
