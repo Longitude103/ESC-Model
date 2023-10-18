@@ -58,6 +58,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	// query each year requested, then we don't have to do it more than once once
 	year := years.StartYear()
 	resultsData := make(map[int]database.SqliteResults)
+	welResultsData := make(map[int]database.SqliteWelResults)
 	for i := 0; i < years.Len(); i++ {
 		// query data for this year
 		fmt.Printf("Querying data for %d\n", year)
@@ -67,9 +68,16 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 			return err
 		}
 
+		wRes, err := database.GetWelResults(db, year)
+		if err != nil {
+			log.Printf("Error querying data: %s", err)
+			return err
+		}
+
 		fmt.Printf("Results have %d records\n", len(res))
 
 		resultsData[year] = res
+		welResultsData[year] = wRes
 		year = years.NextYear()
 		fmt.Printf("Next year is %d\n", year)
 	}
@@ -79,18 +87,24 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		fmt.Printf("Projecting data for %d\n", yr)
 		fmt.Printf("Using year: %d\n", year)
 		newRecords := make(database.SqliteResults, len(resultsData[year]))
+		newWelRecords := make(database.SqliteWelResults, len(welResultsData[year]))
 		copy(newRecords, resultsData[year])
+		copy(newWelRecords, welResultsData[year])
 
 		for i := 0; i < len(newRecords); i++ {
 			newRecords[i].ChangeYear(yr)
 		}
 
-		for i, record := range newRecords {
-			fmt.Printf("Record: %+v\n", record)
+		for i := 0; i < len(newWelRecords); i++ {
+			newWelRecords[i].ChangeYear(yr)
+		}
 
-			if i > 2 {
-				break
-			}
+		if err := database.AddRCHRecords(db, newRecords); err != nil {
+			return err
+		}
+
+		if err := database.AddWelRecords(db, newWelRecords); err != nil {
+			return err
 		}
 
 		// which year to get

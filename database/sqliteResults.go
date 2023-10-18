@@ -42,7 +42,7 @@ func GetResults(db *sqlx.DB, year int) (SqliteResults, error) {
 type SqliteWelResult struct {
 	Id       int       `db:"id"`
 	WellId   int       `db:"well_id"`
-	CellSize float64   `db:"cell_size"`
+	CellNode int       `db:"cell_node"`
 	Dt       time.Time `db:"dt"`
 	FileType int       `db:"file_type"`
 	Result   float64   `db:"result"`
@@ -52,7 +52,7 @@ func (r *SqliteWelResult) ChangeYear(year int) {
 	r.Dt = time.Date(year, r.Dt.Month(), r.Dt.Day(), r.Dt.Hour(), r.Dt.Minute(), r.Dt.Second(), r.Dt.Nanosecond(), r.Dt.Location())
 }
 
-type SqliteWelResults []SqliteResult
+type SqliteWelResults []SqliteWelResult
 
 func GetWelResults(db *sqlx.DB, year int) (SqliteWelResults, error) {
 	if year < 1953 || year > 2020 {
@@ -69,4 +69,46 @@ func GetWelResults(db *sqlx.DB, year int) (SqliteWelResults, error) {
 	}
 
 	return results, nil
+}
+
+func AddRCHRecords(db *sqlx.DB, records SqliteResults) error {
+	rchDB, err := ResultsRchDB(db)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Record count:", len(records))
+	for i := 0; i < len(records); i++ {
+		if err := rchDB.Add(RchResult{Node: records[i].CellNode, Size: records[i].CellSize, Dt: records[i].Dt,
+			FileType: records[i].FileType, Result: records[i].Result}); err != nil {
+			return err
+		}
+	}
+
+	_ = rchDB.Close()
+	return nil
+}
+
+func AddWelRecords(db *sqlx.DB, records SqliteWelResults) error {
+	rchDB, err := ResultsWelDB(db)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Record count:", len(records))
+
+	for i := 0; i < len(records); i++ {
+		if err := rchDB.Add(WelResult{
+			Wellid:   records[i].WellId,
+			Node:     records[i].CellNode,
+			Dt:       records[i].Dt,
+			FileType: records[i].FileType,
+			Result:   records[i].Result,
+		}); err != nil {
+			return err
+		}
+	}
+
+	_ = rchDB.Close()
+	return nil
 }
