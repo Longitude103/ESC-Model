@@ -1,0 +1,72 @@
+package database
+
+import (
+	"errors"
+	"fmt"
+	"github.com/jmoiron/sqlx"
+	"time"
+)
+
+type SqliteResult struct {
+	Id       int       `db:"id"`
+	CellNode int       `db:"cell_node"`
+	CellSize float64   `db:"cell_size"`
+	Dt       time.Time `db:"dt"`
+	FileType int       `db:"file_type"`
+	Result   float64   `db:"result"`
+}
+
+func (r *SqliteResult) ChangeYear(year int) {
+	r.Dt = time.Date(year, r.Dt.Month(), r.Dt.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+type SqliteResults []SqliteResult
+
+func GetResults(db *sqlx.DB, year int) (SqliteResults, error) {
+	if year < 1953 || year > 2020 {
+		return nil, errors.New("year must be between 1953 and 2020")
+	}
+
+	var results SqliteResults
+	query := fmt.Sprintf("SELECT * FROM results WHERE dt >= '%s' AND dt <= '%s';",
+		time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
+		time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"))
+
+	if err := db.Select(&results, query); err != nil {
+		return results, err
+	}
+
+	return results, nil
+}
+
+type SqliteWelResult struct {
+	Id       int       `db:"id"`
+	WellId   int       `db:"well_id"`
+	CellSize float64   `db:"cell_size"`
+	Dt       time.Time `db:"dt"`
+	FileType int       `db:"file_type"`
+	Result   float64   `db:"result"`
+}
+
+func (r *SqliteWelResult) ChangeYear(year int) {
+	r.Dt = time.Date(year, r.Dt.Month(), r.Dt.Day(), r.Dt.Hour(), r.Dt.Minute(), r.Dt.Second(), r.Dt.Nanosecond(), r.Dt.Location())
+}
+
+type SqliteWelResults []SqliteResult
+
+func GetWelResults(db *sqlx.DB, year int) (SqliteWelResults, error) {
+	if year < 1953 || year > 2020 {
+		return nil, errors.New("year must be between 1953 and 2020")
+	}
+
+	var results SqliteWelResults
+	query := fmt.Sprintf("SELECT * FROM wel_results WHERE dt >= '%s' AND dt <= '%s';",
+		time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
+		time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"))
+
+	if err := db.Select(&results, query); err != nil {
+		return results, err
+	}
+
+	return results, nil
+}
