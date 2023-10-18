@@ -1,8 +1,8 @@
 package parcels
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 	"fmt"
-	"github.com/Longitude103/wwum2020/database"
 )
 
 func getSSParcels(v *database.Setup, yr int) []Parcel {

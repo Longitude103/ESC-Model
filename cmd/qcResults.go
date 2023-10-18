@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/logging"
+	"bitbucket.org/longitude-103/wwumm-esc/qc"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/Longitude103/wwum2020/Utils"
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/logging"
-	"github.com/Longitude103/wwum2020/qc"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"path/filepath"

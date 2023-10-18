@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/fileio"
-	"github.com/Longitude103/wwum2020/parcels"
-	"github.com/Longitude103/wwum2020/rchFiles"
-	"github.com/Longitude103/wwum2020/wells"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"bitbucket.org/longitude-103/wwumm-esc/rchFiles"
+	"bitbucket.org/longitude-103/wwumm-esc/wells"
 	"github.com/pterm/pterm"
 )
 

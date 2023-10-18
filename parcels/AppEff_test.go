@@ -1,8 +1,8 @@
 package parcels_test
 
 import (
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/parcels"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"testing"
 )
 

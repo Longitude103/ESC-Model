@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/fileio"
-	"github.com/Longitude103/wwum2020/rchFiles"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"bitbucket.org/longitude-103/wwumm-esc/rchFiles"
 	"github.com/joho/godotenv"
 )
 

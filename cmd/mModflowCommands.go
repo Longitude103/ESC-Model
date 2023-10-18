@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/AlecAivazis/survey/v2"
 	"path/filepath"
 	"time"
 
@@ -9,10 +10,9 @@ import (
 
 	"github.com/pterm/pterm"
 
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/Longitude103/Flogo"
-	"github.com/Longitude103/wwum2020/Utils"
-	"github.com/Longitude103/wwum2020/database"
+	"bitbucket.org/longitude-103/flogo"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 	"github.com/jmoiron/sqlx"
 )
 

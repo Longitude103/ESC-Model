@@ -1,10 +1,10 @@
 package rchFiles
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"database/sql/driver"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/parcels"
 	"github.com/jmoiron/sqlx"
 	"testing"
 	"time"

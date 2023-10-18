@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/fileio"
-	"github.com/Longitude103/wwum2020/parcels/conveyLoss"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels/conveyLoss"
 	"github.com/pterm/pterm"
 )
 

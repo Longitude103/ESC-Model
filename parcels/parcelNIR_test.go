@@ -1,9 +1,9 @@
 package parcels_test
 
 import (
-	"github.com/Longitude103/wwum2020/Utils"
-	"github.com/Longitude103/wwum2020/fileio"
-	"github.com/Longitude103/wwum2020/parcels"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"testing"
 )
 

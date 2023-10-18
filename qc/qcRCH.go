@@ -1,7 +1,7 @@
 package qc
 
 import (
-	"github.com/Longitude103/wwum2020/database"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 )
 
 type QC struct {

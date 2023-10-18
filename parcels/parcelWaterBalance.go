@@ -1,8 +1,8 @@
 package parcels
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 	"errors"
-	"github.com/Longitude103/wwum2020/database"
 	"math"
 )
 

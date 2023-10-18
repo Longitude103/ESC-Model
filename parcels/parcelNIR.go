@@ -1,8 +1,8 @@
 package parcels
 
 import (
-	"github.com/Longitude103/wwum2020/database"
-	"github.com/Longitude103/wwum2020/fileio"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/fileio"
 )
 
 // ParcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.

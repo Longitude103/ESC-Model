@@ -6,7 +6,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/Longitude103/wwum2020/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 )
 
 type ExtWell struct {

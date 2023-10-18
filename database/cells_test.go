@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Longitude103/wwum2020/Utils"
-	"github.com/Longitude103/wwum2020/database"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 	"github.com/joho/godotenv"
 )
 

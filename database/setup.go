@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Longitude103/wwum2020/Utils"
-	"github.com/Longitude103/wwum2020/logging"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/logging"
 	"github.com/jmoiron/sqlx"
 )
 

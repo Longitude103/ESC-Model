@@ -1,15 +1,15 @@
 package conveyLoss
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"github.com/Longitude103/wwum2020/Utils"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Longitude103/wwum2020/database"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 )
 
 // efPeriod is a struct to hold the data from excess_flow_periods

@@ -3,7 +3,7 @@ package parcels
 import (
 	"fmt"
 
-	"github.com/Longitude103/wwum2020/database"
+	"bitbucket.org/longitude-103/wwumm-esc/database"
 )
 
 type Usage struct {

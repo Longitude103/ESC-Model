@@ -1,8 +1,8 @@
 package fileio
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/logging"
 	"bufio"
-	"github.com/Longitude103/wwum2020/logging"
 	"os"
 	"path/filepath"
 	"strconv"

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Longitude103/wwum2020/Utils"
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 	"github.com/paulmach/orb/geojson"
 	"github.com/pterm/pterm"
 )

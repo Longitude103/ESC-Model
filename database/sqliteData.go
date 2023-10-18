@@ -1,11 +1,11 @@
 package database
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 	"database/sql"
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/Longitude103/wwum2020/Utils"
 	"strconv"
 	"strings"
 	"time"

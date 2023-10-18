@@ -7,7 +7,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/Longitude103/gisUtils"
+	"bitbucket.org/longitude-103/gisUtils"
 )
 
 type ModelCell struct {

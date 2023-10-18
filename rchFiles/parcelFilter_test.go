@@ -1,7 +1,7 @@
 package rchFiles
 
 import (
-	"github.com/Longitude103/wwum2020/parcels"
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"testing"
 )
 

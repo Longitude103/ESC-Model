@@ -1,9 +1,9 @@
 package rchFiles
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"errors"
 	"fmt"
-	"github.com/Longitude103/wwum2020/parcels"
 )
 
 // parcelFilterByYear is a function to filter our a parcels by a year and return a slice of those that are all of that year

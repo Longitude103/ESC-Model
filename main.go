@@ -20,7 +20,7 @@
 // files.
 package main
 
-import "github.com/Longitude103/wwum2020/cmd"
+import "bitbucket.org/longitude-103/wwumm-esc/cmd"
 
 // main function is the entry for the application that sets up the CLI and sets the flags needed for the application. This
 // function also has an error checking to deal with flags not set correctly.
