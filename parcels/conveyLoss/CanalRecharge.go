@@ -82,6 +82,10 @@ func CanalRecharge(v *database.Setup) (err error) {
 		}
 	}
 
+	if err := MakeRechargeData(v); err != nil {
+		return err
+	}
+
 	if v.AppDebug {
 		v.Logger.Debugf("Check Total is %f", checkDivTotal)
 	}
