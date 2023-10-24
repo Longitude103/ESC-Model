@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"bitbucket.org/longitude-103/wwumm-esc/logging"
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -52,10 +55,35 @@ func init() {
 
 func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileName, description string) error {
 	// load local database
-	_, db, err := DbQuestion()
+	dbString, db, err := DbQuestion()
 	if err != nil {
 		return err
 	}
+
+	grid, err := database.GetGrid(db)
+	if err != nil {
+		return err
+	}
+
+	path, fileName, err := Utils.MakeOutputDir("qc")
+	if err != nil {
+		return err
+	}
+
+	v := database.Setup{}
+	logFileName := fmt.Sprintf("qcFiles%s.log", fileName)
+	filePath := filepath.Join(path, logFileName)
+
+	v.PgDb, err = database.PgConnx(myEnv)
+	if err != nil {
+		fmt.Printf("Cannot set PgConnx")
+	}
+
+	l := logging.NewLogger(filePath)
+	v.Logger = l
+	v.SlDb = db
+
+	v.Logger.Info("Using Results Database: " + dbString)
 
 	// sqlite database
 	// query each year requested, then we don't have to do it more than once once
@@ -85,6 +113,13 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		fmt.Printf("Next year is %d\n", year)
 	}
 
+	// get retirement data
+	retirementData, err := database.GetRetirements(&v, grid, years.AllYears())
+	if err != nil {
+		log.Printf("Error getting retirement data: %s", err)
+		return err
+	}
+
 	year = years.StartYear()
 	for yr := 2021; yr < 2021+projYears; yr++ {
 		fmt.Printf("Projecting data for %d\n", yr)
@@ -101,6 +136,15 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		for i := 0; i < len(newWelRecords); i++ {
 			newWelRecords[i].ChangeYear(yr)
 		}
+
+		retireData := retirementData[year]
+		retireRecords, err := retireData.SendRetirements(year)
+		if err != nil {
+			log.Printf("Error getting retirement data: %s", err)
+			return err
+		}
+
+		newWelRecords = append(newWelRecords, retireRecords...)
 
 		if err := database.AddRCHRecords(db, newRecords); err != nil {
 			return err
@@ -195,3 +239,16 @@ func (r *repeatYears) String() string {
 
 	return yearsString
 }
+
+func (r *repeatYears) AllYears() []int {
+	return r.yearsList
+}
+
+// need to handle getting all the retirement parcels from the database and use them as part of the projection
+// 1. Get retirement parcels from the database based on the years in repeatYears.yearsList
+// 2. Get the associated wells that these retirements that may be returned to irrigation would irrigate through, also get the
+// node of the model cell the well is located in.
+// 3. Find the end year of the retirement parcel and save that in the struct
+// 4. When a parcel dataset is used based on the year, check to see if there are expired retirements that should return to irrigation
+// 5. Find the amount of projected pumping and apply net pumping (allocation * 1-IrrEfficiency)
+// 6. Split by simple pumping curve into monthly pumping and save to the wel_results table
