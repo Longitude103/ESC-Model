@@ -22,20 +22,21 @@ func (r Retirement) IsExpired(year int) bool {
 
 func (r Retirement) ToSqliteWelResults(year int) SqliteWelResults {
 	results := make(SqliteWelResults, len(r.RWells))
+	pPump := ((r.ProjPump / float64(len(r.RWells))) * r.Area) / 12.0
 	for _, w := range r.RWells {
 		for i := 0; i < 3; i++ {
 			mnth := time.June
-			pmp := r.ProjPump * 0.85 * 0.2
+			pmp := pPump * 0.85 * 0.2
 			switch i {
 			case 1:
 				{
 					mnth = time.July
-					pmp = r.ProjPump * 0.85 * 0.4
+					pmp = pPump * 0.85 * 0.4
 				}
 			case 2:
 				{
 					mnth = time.August
-					pmp = r.ProjPump * 0.85 * 0.4
+					pmp = pPump * 0.85 * 0.4
 				}
 			}
 
