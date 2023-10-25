@@ -70,20 +70,37 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 		return retirements, errors.New("year must be 2008 through 2020")
 	}
 
+	npRetirements := Retirements{}
 	selectStmt := fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from np.t%[1]d_dry inner join np.retirements on t%[1]d_dry.retirement = retirements.id inner join np.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
-	if err := v.PgDb.Select(&retirements, selectStmt); err != nil {
+	if err := v.PgDb.Select(&npRetirements, selectStmt); err != nil {
 		return retirements, err
 	}
 
+	spRetirements := Retirements{}
+	selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from sp.t%[1]d_dry inner join sp.retirements on t%[1]d_dry.retirement = retirements.id inner join sp.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
+	if err := v.PgDb.Select(&spRetirements, selectStmt); err != nil {
+		return retirements, err
+	}
+
+	copy(retirements, append(npRetirements, spRetirements...))
 	return retirements, nil
 }
 
 func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) {
+
+	npWells := RetirementWells{}
 	query := fmt.Sprintf("select retirement, well, node from np.retirements_jct inner join np.npnrd_wells on well = npnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, npnrd_wells.geom) where mc.cell_type = %d;", grid)
-	if err := v.PgDb.Select(&rWells, query); err != nil {
+	if err := v.PgDb.Select(&npWells, query); err != nil {
 		return rWells, err
 	}
 
+	spWells := RetirementWells{}
+	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.npnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", grid)
+	if err := v.PgDb.Select(&spWells, query); err != nil {
+		return rWells, err
+	}
+
+	copy(rWells, append(npWells, spWells...))
 	return rWells, nil
 }
 
