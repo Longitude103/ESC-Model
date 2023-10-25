@@ -34,10 +34,20 @@ of flags in the CLI. This is a core go package.
   new MODFLOW files for MODFLOW 6 in the form of RCH6 and WEL6 files. It creates an "OutputFiles" directory in the
   same location as the binary for the result files.
 
-
 - qcResults => is a CLI function to retrieve information from the results' database for information about the run. The initial
   function asks questions about which results database to analyze and then produces an Annual Recharge Summary by recharge
   type. In addition, it can also create a GeoJSON file for further analysis in the "OutputFiles" directory
+
+- project => is a CLI function to project pumping and recharge forward to operate the robust review analysis. This function
+  enables the user to select a list of years to project and how many years into the future and the pattern to repeat those years.
+  The command requires a already existing results database to use and the ability to connect to the internet for it's analysis.
+
+- parcel-delete => is a CLI function to delete a parcel from the land use dataset within the source data application. This 
+  function also deletes the corresponding value in the junction table to ensure the database constraints are properly executed.
+
+- runSteadyState => is a CLI function to run the steady state model execution for the EscModel. This function will run the model 
+  using the provided configuration for steady state. It will create a new output database file on your local filesystem in the 
+  same directory as the executable.
 ### Common CLI Examples
 - Production runModel:
   - Windows -> In Powershell: `wwum2020-amd64-windows.exe runModel --Desc "Test Run" --CSDir "<path>\WWUMM2020\CropSim\Run005_WWUM2020\Output"`
