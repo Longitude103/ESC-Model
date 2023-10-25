@@ -243,12 +243,3 @@ func (r *repeatYears) String() string {
 func (r *repeatYears) AllYears() []int {
 	return r.yearsList
 }
-
-// need to handle getting all the retirement parcels from the database and use them as part of the projection
-// 1. Get retirement parcels from the database based on the years in repeatYears.yearsList
-// 2. Get the associated wells that these retirements that may be returned to irrigation would irrigate through, also get the
-// node of the model cell the well is located in.
-// 3. Find the end year of the retirement parcel and save that in the struct
-// 4. When a parcel dataset is used based on the year, check to see if there are expired retirements that should return to irrigation
-// 5. Find the amount of projected pumping and apply net pumping (allocation * 1-IrrEfficiency)
-// 6. Split by simple pumping curve into monthly pumping and save to the wel_results table
