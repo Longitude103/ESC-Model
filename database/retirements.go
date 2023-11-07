@@ -96,7 +96,7 @@ func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) 
 	}
 
 	spWells := RetirementWells{}
-	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.npnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", grid)
+	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.spnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", grid)
 	if err := v.PgDb.Select(&spWells, query); err != nil {
 		return rWells, err
 	}
