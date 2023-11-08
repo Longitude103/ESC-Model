@@ -102,7 +102,7 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 	// remove parcels that are gw == true and sw == false if v.TotalDep is true
 	if v.TotalDep {
 		for i := 0; i < len(parcels); i++ {
-			if parcels[i].Gw.Bool == true && parcels[i].Sw.Bool == false {
+			if parcels[i].IsGWO() {
 				parcels = append(parcels[:i], parcels[i+1:]...)
 				i--
 			}
