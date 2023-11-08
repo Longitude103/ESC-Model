@@ -12,21 +12,22 @@ import (
 )
 
 type Setup struct {
-	PgDb         *sqlx.DB
-	SqliteDB     bool
-	SlDb         *sqlx.DB
-	SYear        int
-	EYear        int
-	Logger       *logging.TheLogger
-	PNirDB       *DB
-	RchDb        *RchDB
-	AppDebug     bool
-	NoExcessFlow bool
-	Post97       bool
-	OldGrid      bool
-	MF640Grid    bool
-	SteadyState  bool
-	TotalDep     bool
+	PgDb          *sqlx.DB
+	SqliteDB      bool
+	SlDb          *sqlx.DB
+	SYear         int
+	EYear         int
+	Logger        *logging.TheLogger
+	PNirDB        *DB
+	RchDb         *RchDB
+	AppDebug      bool
+	NoExcessFlow  bool
+	Post97        bool
+	OldGrid       bool
+	MF640Grid     bool
+	SteadyState   bool
+	TotalDep      bool
+	AllocAnalysis bool
 }
 
 type Option func(*Setup)
@@ -124,6 +125,10 @@ func WithMF640Grid() Option {
 
 func WithTotalDepletion() Option {
 	return func(s *Setup) { s.TotalDep = true }
+}
+
+func WithAllocAnalysis() Option {
+	return func(s *Setup) { s.AllocAnalysis = true }
 }
 
 // WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952

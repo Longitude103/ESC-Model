@@ -30,13 +30,14 @@ var runModelCmd = &cobra.Command{
 		oldGrid, _ := cmd.Flags().GetBool("oldGrid")
 		mf6Grid40, _ := cmd.Flags().GetBool("mf6Grid40")
 		totalDepletion, _ := cmd.Flags().GetBool("TotalDep")
+		AllocAnalysis, _ := cmd.Flags().GetBool("AllocAnalysis")
 
 		if oldGrid && mf6Grid40 {
 			pterm.Error.Println("oldGrid and mf6Grid40 are mutually exclusive")
 			return
 		}
 
-		if err := runModel(debug, &csDir, desc, sYr, eYr, ef, post97, oldGrid, mf6Grid40, totalDepletion, myEnv); err != nil {
+		if err := runModel(debug, &csDir, desc, sYr, eYr, ef, post97, oldGrid, mf6Grid40, totalDepletion, AllocAnalysis, myEnv); err != nil {
 			pterm.Error.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
@@ -55,11 +56,12 @@ func init() {
 	runModelCmd.Flags().BoolP("oldGrid", "o", false, "If flag set, the model will use the 40 acre grid, not USG as default")
 	runModelCmd.Flags().BoolP("mf6Grid40", "m", false, "If flag set, the model will use the 40 acre grid but in MF6 Node Numbers")
 	runModelCmd.Flags().BoolP("TotalDep", "t", false, "If flag set, the model will run in total depletion mode")
+	runModelCmd.Flags().BoolP("AllocAnalysis", "a", false, "If flag set, the model will run in allocation analysis mode")
 	_ = runModelCmd.MarkFlagRequired("CSDir")
 	_ = runModelCmd.MarkFlagRequired("Desc")
 }
 
-func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, oldGrid, mf640, totalDep bool, myEnv map[string]string) error {
+func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, oldGrid, mf640, totalDep, allocAnalysis bool, myEnv map[string]string) error {
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
@@ -86,6 +88,10 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 
 	if totalDep {
 		opts = append(opts, database.WithTotalDepletion())
+	}
+
+	if allocAnalysis {
+		opts = append(opts, database.WithAllocAnalysis())
 	}
 
 	v, err := database.NewSetup(myEnv, opts...)

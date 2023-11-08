@@ -113,7 +113,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		// add usage to parcel
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel Annual Usage", y))
 		v.Logger.Info("Setting Annual Usage")
-		if err := DistUsage(usage[y], &parcels, v.Post97); err != nil {
+		if err := DistUsage(usage[y], &parcels, v); err != nil {
 			return []Parcel{}, err
 		}
 
@@ -162,10 +162,15 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 	return AllParcels, nil
 }
 
-func DistUsage(annUsage []Usage, parcels *[]Parcel, post97 bool) error {
+func DistUsage(annUsage []Usage, parcels *[]Parcel, v *database.Setup) error {
 	for _, u := range annUsage {
+		filterGWO := false
+		if v.Post97 || v.AllocAnalysis {
+			filterGWO = true
+		}
+
 		// filter parcels to this usage cert
-		filteredParcels := FilterParcelByCert(parcels, u.CertNum, post97)
+		filteredParcels := FilterParcelByCert(parcels, u.CertNum, filterGWO)
 
 		totalNIR := 0.0
 		totalMonthlyNIR := [12]float64{}
