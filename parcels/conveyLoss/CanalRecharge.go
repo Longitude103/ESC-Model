@@ -71,8 +71,13 @@ func CanalRecharge(v *database.Setup) (err error) {
 				}
 			} else {
 				if structureLoss > 0 {
+					ft := 124
+					if div.CanalId == 54 {
+						ft = 125
+					}
+
 					err := v.RchDb.Add(database.RchResult{Node: cell.Node, Size: cell.CellArea, Dt: div.DivDate.Time,
-						FileType: 124, Result: structureLoss * factor * 1.9835})
+						FileType: ft, Result: structureLoss * factor * 1.9835})
 					if err != nil {
 						return err
 					}
