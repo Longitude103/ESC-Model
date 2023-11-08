@@ -138,15 +138,6 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 		v.Logger.Infof("Simulating parcel WSPP for year %d", y)
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel WSPP", y))
 		for p := 0; p < len(parcels); p++ {
-			//wg.Add(1)
-			//go func(i int) {
-			//	defer wg.Done()
-			//	err := (&parcels[i]).waterBalanceWSPP(false)
-			//	if err != nil {
-			//		v.Logger.Errorf("error in parcel WSPP parcel data: %+v", parcels[p])
-			//	}
-			//}(p)
-
 			err := (&parcels[p]).WaterBalanceWSPP(v)
 			if err != nil {
 				v.Logger.Errorf("error in parcel WSPP: %s\n", err)
@@ -155,7 +146,7 @@ func ParcelPump(v *database.Setup, csResults map[string][]fileio.StationResults,
 
 			AllParcels = append(AllParcels, parcels[p])
 		}
-		//wg.Wait()
+
 		p.Increment()
 	}
 
