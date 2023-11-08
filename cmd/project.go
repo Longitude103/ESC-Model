@@ -92,7 +92,6 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	welResultsData := make(map[int]database.SqliteWelResults)
 	for i := 0; i < years.Len(); i++ {
 		// query data for this year
-		fmt.Printf("Querying data for %d\n", year)
 		res, err := database.GetResults(db, year)
 		if err != nil {
 			log.Printf("Error querying data: %s", err)
@@ -105,12 +104,9 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 			return err
 		}
 
-		fmt.Printf("Results have %d records\n", len(res))
-
 		resultsData[year] = res
 		welResultsData[year] = wRes
 		year = years.NextYear()
-		fmt.Printf("Next year is %d\n", year)
 	}
 
 	// get retirement data

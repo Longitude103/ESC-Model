@@ -13,6 +13,7 @@ type Retirement struct {
 	StartDate time.Time `db:"start_date"`
 	EndDate   time.Time `db:"end_date"`
 	ProjPump  float64   `db:"proj_pumping"`
+	Nrd       string
 	RWells    RetirementWells
 }
 
@@ -25,26 +26,33 @@ func (r Retirement) ToSqliteWelResults(year int) SqliteWelResults {
 	pPump := ((r.ProjPump / float64(len(r.RWells))) * r.Area) / 12.0
 	for _, w := range r.RWells {
 		for i := 0; i < 3; i++ {
-			mnth := time.June
-			pmp := pPump * 0.85 * 0.2
+			var mnth time.Month
+			var pmp float64
 			switch i {
+			case 0:
+				mnth = time.June
+				pmp = pPump * 0.85 * 0.2
 			case 1:
-				{
-					mnth = time.July
-					pmp = pPump * 0.85 * 0.4
-				}
+				mnth = time.July
+				pmp = pPump * 0.85 * 0.4
 			case 2:
-				{
-					mnth = time.August
-					pmp = pPump * 0.85 * 0.4
-				}
+				mnth = time.August
+				pmp = pPump * 0.85 * 0.4
+			}
+
+			var ft int
+			switch r.Nrd {
+			case "NP":
+				ft = 221
+			default:
+				ft = 222
 			}
 
 			sqlWelResult := SqliteWelResult{
 				WellId:   w.Well,
 				CellNode: w.Node,
 				Dt:       time.Date(year, mnth, 1, 0, 0, 0, 0, time.UTC),
-				FileType: 221,
+				FileType: ft,
 				Result:   pmp,
 			}
 
@@ -61,6 +69,7 @@ type RetirementWell struct {
 	RId  int `db:"retirement"`
 	Well int `db:"well"`
 	Node int `db:"node"`
+	Nrd  string
 }
 
 type RetirementWells []RetirementWell
@@ -77,10 +86,18 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 		return retirements, err
 	}
 
+	for i := 0; i < len(npRetirements); i++ {
+		npRetirements[i].Nrd = "NP"
+	}
+
 	spRetirements := Retirements{}
 	selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from sp.t%[1]d_dry inner join sp.retirements on t%[1]d_dry.retirement = retirements.id inner join sp.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
 	if err := v.PgDb.Select(&spRetirements, selectStmt); err != nil {
 		return retirements, err
+	}
+
+	for i := 0; i < len(spRetirements); i++ {
+		spRetirements[i].Nrd = "SP"
 	}
 
 	copy(retirements, append(npRetirements, spRetirements...))
@@ -95,10 +112,18 @@ func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) 
 		return rWells, err
 	}
 
+	for i := 0; i < len(npWells); i++ {
+		npWells[i].Nrd = "NP"
+	}
+
 	spWells := RetirementWells{}
 	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.spnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", grid)
 	if err := v.PgDb.Select(&spWells, query); err != nil {
 		return rWells, err
+	}
+
+	for i := 0; i < len(spWells); i++ {
+		spWells[i].Nrd = "SP"
 	}
 
 	copy(rWells, append(npWells, spWells...))
