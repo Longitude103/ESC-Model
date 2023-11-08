@@ -26,6 +26,7 @@ type Setup struct {
 	OldGrid      bool
 	MF640Grid    bool
 	SteadyState  bool
+	TotalDep     bool
 }
 
 type Option func(*Setup)
@@ -119,6 +120,10 @@ func WithOldGrid() Option {
 
 func WithMF640Grid() Option {
 	return func(s *Setup) { s.MF640Grid = true }
+}
+
+func WithTotalDepletion() Option {
+	return func(s *Setup) { s.TotalDep = true }
 }
 
 // WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952

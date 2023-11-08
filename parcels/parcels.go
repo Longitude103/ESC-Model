@@ -99,6 +99,16 @@ GROUP BY parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c.c
 		v.Logger.Errorf("Error in getting parcels for year %d, error: %s", Year, err)
 	}
 
+	// remove parcels that are gw == true and sw == false if v.TotalDep is true
+	if v.TotalDep {
+		for i := 0; i < len(parcels); i++ {
+			if parcels[i].Gw.Bool == true && parcels[i].Sw.Bool == false {
+				parcels = append(parcels[:i], parcels[i+1:]...)
+				i--
+			}
+		}
+	}
+
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = Year
 		parcels[i].ChangeFallow()
