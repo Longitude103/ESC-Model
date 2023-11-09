@@ -86,11 +86,13 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	v.Logger.Info("Using Results Database: " + dbString)
 
 	// sqlite database
-	// query each year requested, then we don't have to do it more than once once
+	// query each year requested, then we don't have to do it more than once
 	year := years.StartYear()
 	resultsData := make(map[int]database.SqliteResults)
 	welResultsData := make(map[int]database.SqliteWelResults)
+	spin, _ := pterm.DefaultSpinner.Start("Getting Projection Data")
 	for i := 0; i < years.Len(); i++ {
+		spin.UpdateText(fmt.Sprintf("Querying Year %d", year))
 		// query data for this year
 		res, err := database.GetResults(db, year)
 		if err != nil {
@@ -108,16 +110,24 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		welResultsData[year] = wRes
 		year = years.NextYear()
 	}
+	spin.Success("Projection Data Query Complete")
 
 	// get retirement data
+	spin.UpdateText("Getting Retirement Data")
 	retirementData, err := database.GetRetirements(&v, grid, years.AllYears())
 	if err != nil {
 		log.Printf("Error getting retirement data: %s", err)
 		return err
 	}
+	spin.Success("Retirement Data Query Complete")
+	for k, v := range retirementData {
+		fmt.Printf("Retirement %d: has %d records\n", k, len(v))
+	}
 
 	year = years.StartYear()
+	spin.UpdateText("Starting Projection")
 	for yr := 2021; yr < 2021+projYears; yr++ {
+		spin.UpdateText("Projecting Year " + strconv.Itoa(yr))
 		newRecords := make(database.SqliteResults, len(resultsData[year]))
 		newWelRecords := make(database.SqliteWelResults, len(welResultsData[year]))
 		copy(newRecords, resultsData[year])
@@ -140,37 +150,40 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 
 		newWelRecords = append(newWelRecords, retireRecords...)
 
-		if err := database.AddRCHRecords(db, newRecords); err != nil {
-			return err
-		}
+		//if err := database.AddRCHRecords(db, newRecords); err != nil {
+		//	return err
+		//}
 
-		if err := database.AddWelRecords(db, newWelRecords); err != nil {
-			return err
-		}
+		//if err := database.AddWelRecords(db, newWelRecords); err != nil {
+		//	return err
+		//}
 
 		// which year to get
 		year = years.NextYear()
 	}
+	spin.Success("Projection Complete")
 
+	spin.UpdateText("Updating Output Notes")
 	resultsNote, err := database.ResultsNoteDB(db)
 	if err != nil {
 		return err
 	}
 
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
-		return err
-	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
-		return err
-	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
-		return err
-	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
-		return err
-	}
+	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
+	//	return err
+	//}
+	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
+	//	return err
+	//}
+	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
+	//	return err
+	//}
+	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
+	//	return err
+	//}
 
 	_ = resultsNote.Close()
+	spin.Success("Output Notes Updated")
 
 	return nil
 }

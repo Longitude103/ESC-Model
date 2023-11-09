@@ -77,7 +77,6 @@ func AddRCHRecords(db *sqlx.DB, records SqliteResults) error {
 		return err
 	}
 
-	fmt.Println("Record count:", len(records))
 	for i := 0; i < len(records); i++ {
 		if err := rchDB.Add(RchResult{Node: records[i].CellNode, Size: records[i].CellSize, Dt: records[i].Dt,
 			FileType: records[i].FileType, Result: records[i].Result}); err != nil {
@@ -94,8 +93,6 @@ func AddWelRecords(db *sqlx.DB, records SqliteWelResults) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("Record count:", len(records))
 
 	for i := 0; i < len(records); i++ {
 		if err := rchDB.Add(WelResult{

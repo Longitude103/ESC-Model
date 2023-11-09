@@ -104,8 +104,7 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 	for i := 0; i < len(spRetirements); i++ {
 		spRetirements[i].Nrd = "SP"
 	}
-
-	copy(retirements, append(npRetirements, spRetirements...))
+	retirements = append(npRetirements, spRetirements...)
 	return retirements, nil
 }
 
@@ -130,14 +129,14 @@ func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) 
 		spWells[i].Nrd = "SP"
 	}
 
-	copy(rWells, append(npWells, spWells...))
+	rWells = append(npWells, spWells...)
 	return rWells, nil
 }
 
 func GetRetirements(v *Setup, grid int, rYears []int) (allRetirements map[int]Retirements, err error) {
 	allRetirements = make(map[int]Retirements)
-
 	allRetirementWells, err := GetRetirementWells(v, grid)
+
 	if err != nil {
 		return allRetirements, err
 	}
