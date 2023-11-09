@@ -28,11 +28,12 @@ func MakeRechargeData(v *database.Setup) (err error) {
 		for j := 0; j < len(rechargeSites[i].RchData); j++ {
 			if err := rchDB.Add(database.RchResult{Node: rechargeSites[i].Node, Size: rechargeSites[i].Size, Dt: rechargeSites[i].RchData[j].RchMonth,
 				FileType: rechargeSites[i].FileType, Result: rechargeSites[i].RchData[i].Value}); err != nil {
+				spin.Fail("Saving Recharge Results Failed")
 				return err
 			}
 		}
 	}
-	spin.Success()
+	spin.Success("SP Recharge Site information saved to results database")
 	v.Logger.Info("SP Recharge Site function completed.")
 	return nil
 }
