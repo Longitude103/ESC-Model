@@ -28,6 +28,7 @@ type Setup struct {
 	SteadyState   bool
 	TotalDep      bool
 	AllocAnalysis bool
+	P97Dep        bool
 }
 
 type Option func(*Setup)
@@ -129,6 +130,10 @@ func WithTotalDepletion() Option {
 
 func WithAllocAnalysis() Option {
 	return func(s *Setup) { s.AllocAnalysis = true }
+}
+
+func WithP97Depletions() Option {
+	return func(s *Setup) { s.P97Dep = true }
 }
 
 // WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952

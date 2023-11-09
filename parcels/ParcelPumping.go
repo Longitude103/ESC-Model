@@ -161,7 +161,7 @@ func DistUsage(annUsage []Usage, parcels *[]Parcel, v *database.Setup) error {
 		}
 
 		// filter parcels to this usage cert
-		filteredParcels := FilterParcelByCert(parcels, u.CertNum, filterGWO)
+		filteredParcels := FilterParcelByCert(parcels, u.CertNum, filterGWO, v.P97Dep)
 
 		totalNIR := 0.0
 		totalMonthlyNIR := [12]float64{}

@@ -118,8 +118,6 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 
 	year = years.StartYear()
 	for yr := 2021; yr < 2021+projYears; yr++ {
-		fmt.Printf("Projecting data for %d\n", yr)
-		fmt.Printf("Using year: %d\n", year)
 		newRecords := make(database.SqliteResults, len(resultsData[year]))
 		newWelRecords := make(database.SqliteWelResults, len(welResultsData[year]))
 		copy(newRecords, resultsData[year])
@@ -134,7 +132,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		}
 
 		retireData := retirementData[year]
-		retireRecords, err := retireData.SendRetirements(year)
+		retireRecords, err := retireData.SendRetirements(year, false)
 		if err != nil {
 			log.Printf("Error getting retirement data: %s", err)
 			return err

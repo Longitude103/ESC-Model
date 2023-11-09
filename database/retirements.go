@@ -21,9 +21,14 @@ func (r Retirement) IsExpired(year int) bool {
 	return r.EndDate.Before(time.Date(year, time.July, 1, 0, 0, 0, 0, time.UTC))
 }
 
-func (r Retirement) ToSqliteWelResults(year int) SqliteWelResults {
+func (r Retirement) ToSqliteWelResults(year int, fullCorn bool) SqliteWelResults {
 	results := make(SqliteWelResults, len(r.RWells))
-	pPump := ((r.ProjPump / float64(len(r.RWells))) * r.Area) / 12.0
+	pmpAmount := r.ProjPump
+	if fullCorn {
+		pmpAmount = 15
+	}
+
+	pPump := ((pmpAmount / float64(len(r.RWells))) * r.Area) / 12.0
 	for _, w := range r.RWells {
 		for i := 0; i < 3; i++ {
 			var mnth time.Month
@@ -105,7 +110,6 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 }
 
 func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) {
-
 	npWells := RetirementWells{}
 	query := fmt.Sprintf("select retirement, well, node from np.retirements_jct inner join np.npnrd_wells on well = npnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, npnrd_wells.geom) where mc.cell_type = %d;", grid)
 	if err := v.PgDb.Select(&npWells, query); err != nil {
@@ -151,18 +155,38 @@ func GetRetirements(v *Setup, grid int, rYears []int) (allRetirements map[int]Re
 				}
 			}
 		}
+
+		allRetirements[rYear] = singleYrRetirements
 	}
 
 	return allRetirements, nil
 }
 
-func (rs *Retirements) SendRetirements(year int) (welResults SqliteWelResults, err error) {
+func GetOneYearRetirements(v *Setup, grid int, year int) (Retirements, error) {
+	allRetirementWells, err := GetRetirementWells(v, grid)
+	singleYrRetirements, err := GetSingleYearRetirements(v, year)
+	if err != nil {
+		return Retirements{}, err
+	}
+
+	for i := 0; i < len(singleYrRetirements); i++ {
+		for _, w := range allRetirementWells {
+			if w.RId == singleYrRetirements[i].Id {
+				singleYrRetirements[i].RWells = append(singleYrRetirements[i].RWells, w)
+			}
+		}
+	}
+
+	return singleYrRetirements, nil
+}
+
+func (rs *Retirements) SendRetirements(year int, fullCorn bool) (welResults SqliteWelResults, err error) {
 	welResults = SqliteWelResults{}
 
 	for i := 0; i < len(*rs); i++ {
 		retirement := (*rs)[i]
 		if retirement.IsExpired(year) {
-			welResults = append(welResults, retirement.ToSqliteWelResults(year)...)
+			welResults = append(welResults, retirement.ToSqliteWelResults(year, fullCorn)...)
 		}
 	}
 
