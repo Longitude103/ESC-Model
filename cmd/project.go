@@ -120,11 +120,8 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		return err
 	}
 	spin.Success("Retirement Data Query Complete")
-	for k, v := range retirementData {
-		fmt.Printf("Retirement %d: has %d records\n", k, len(v))
-	}
-
 	year = years.StartYear()
+
 	spin.UpdateText("Starting Projection")
 	for yr := 2021; yr < 2021+projYears; yr++ {
 		spin.UpdateText("Projecting Year " + strconv.Itoa(yr))
@@ -142,7 +139,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		}
 
 		retireData := retirementData[year]
-		retireRecords, err := retireData.SendRetirements(year, false)
+		retireRecords, err := retireData.SendRetirements(yr, false)
 		if err != nil {
 			log.Printf("Error getting retirement data: %s", err)
 			return err
@@ -150,13 +147,13 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 
 		newWelRecords = append(newWelRecords, retireRecords...)
 
-		//if err := database.AddRCHRecords(db, newRecords); err != nil {
-		//	return err
-		//}
+		if err := database.AddRCHRecords(db, newRecords); err != nil {
+			return err
+		}
 
-		//if err := database.AddWelRecords(db, newWelRecords); err != nil {
-		//	return err
-		//}
+		if err := database.AddWelRecords(db, newWelRecords); err != nil {
+			return err
+		}
 
 		// which year to get
 		year = years.NextYear()
@@ -169,18 +166,18 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		return err
 	}
 
-	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
-	//	return err
-	//}
-	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
-	//	return err
-	//}
-	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
-	//	return err
-	//}
-	//if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
-	//	return err
-	//}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
+		return err
+	}
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
+		return err
+	}
 
 	_ = resultsNote.Close()
 	spin.Success("Output Notes Updated")

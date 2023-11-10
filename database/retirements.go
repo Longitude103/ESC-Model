@@ -22,7 +22,11 @@ func (r Retirement) IsExpired(year int) bool {
 }
 
 func (r Retirement) ToSqliteWelResults(year int, fullCorn bool) SqliteWelResults {
-	results := make(SqliteWelResults, len(r.RWells))
+	if r.RWells == nil || len(r.RWells) == 0 {
+		return nil
+	}
+
+	var results SqliteWelResults
 	pmpAmount := r.ProjPump
 	if fullCorn {
 		pmpAmount = 15
@@ -184,6 +188,10 @@ func (rs *Retirements) SendRetirements(year int, fullCorn bool) (welResults Sqli
 
 	for i := 0; i < len(*rs); i++ {
 		retirement := (*rs)[i]
+		if retirement.RWells == nil || len(retirement.RWells) == 0 {
+			continue
+		}
+
 		if retirement.IsExpired(year) {
 			welResults = append(welResults, retirement.ToSqliteWelResults(year, fullCorn)...)
 		}
