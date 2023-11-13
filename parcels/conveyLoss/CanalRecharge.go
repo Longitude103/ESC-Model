@@ -83,7 +83,6 @@ func CanalRecharge(v *database.Setup) (err error) {
 					}
 				}
 			}
-
 		}
 	}
 
