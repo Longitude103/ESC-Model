@@ -3,7 +3,6 @@ package rchFiles
 import (
 	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"errors"
-	"fmt"
 )
 
 // parcelFilterByYear is a function to filter our a parcels by a year and return a slice of those that are all of that year
@@ -37,6 +36,6 @@ func parcelFilterById(p []parcels.Parcel, id int, nrd string) (parcels.Parcel, e
 		}
 	}
 
-	errMessage := fmt.Sprintf("no parcel with id: %d", id)
+	errMessage := "no parcel with that id"
 	return parcels.Parcel{}, errors.New(errMessage)
 }

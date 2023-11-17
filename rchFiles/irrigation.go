@@ -40,9 +40,14 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 		for i := 0; i < len(irrCells); i++ {
 			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
 			if err != nil {
-				v.Logger.Errorf("parcelFilterById error for parcel Id: %d, year: %d, and nrd: %s", irrCells[i].ParcelId, y, irrCells[i].Nrd)
-				return err
+				if err.Error() == "no parcel with that id" {
+					continue
+				} else {
+					v.Logger.Errorf("parcelFilterById error for parcel Id: %d, year: %d, and nrd: %s", irrCells[i].ParcelId, y, irrCells[i].Nrd)
+					return err
+				}
 			}
+
 			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, p.IsPost97())
 			if err != nil {
 				v.Logger.Errorf("assignRCHType error where nrd is %s, SW: %t, GW: %t, post97: %t", p.Nrd, p.Sw.Bool, p.Gw.Bool, p.IsPost97())
