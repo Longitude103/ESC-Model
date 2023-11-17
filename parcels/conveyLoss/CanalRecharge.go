@@ -72,7 +72,7 @@ func CanalRecharge(v *database.Setup) (err error) {
 			} else {
 				if structureLoss > 0 {
 					ft := 124
-					if div.CanalId == 54 {
+					if div.CanalId == 402 {
 						ft = 125
 					}
 
