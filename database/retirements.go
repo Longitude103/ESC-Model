@@ -169,7 +169,12 @@ func GetOneYearRetirements(v *Setup, grid int, year int) (Retirements, error) {
 	allRetirementWells, err := GetRetirementWells(v, grid)
 	singleYrRetirements, err := GetSingleYearRetirements(v, year)
 	if err != nil {
-		return Retirements{}, err
+		if err.Error() == "year must be 2008 through 2020" {
+			v.Logger.Errorf("Year %d is not a valid retirement year, skipped", year)
+			return Retirements{}, nil
+		} else {
+			return Retirements{}, err
+		}
 	}
 
 	for i := 0; i < len(singleYrRetirements); i++ {
