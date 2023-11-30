@@ -183,7 +183,7 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 
 	// parcel pumping
 	v.Logger.Info("Preforming Parcel Pumping")
-	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}

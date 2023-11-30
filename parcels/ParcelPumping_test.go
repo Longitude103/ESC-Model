@@ -45,7 +45,19 @@ func Test_distUsage(t *testing.T) {
 		testParcelSlice[0].Pump[i] = 0
 	}
 
-	err := parcels.DistUsage(testUsageSlice, &testParcelSlice, false)
+	var myEnv map[string]string
+	myEnv, err := godotenv.Read("../.env")
+	if err != nil {
+		fmt.Println("Cannot load Env Variables:", err)
+		os.Exit(1)
+	}
+
+	v, err := database.NewSetup(myEnv, database.WithNoSQLite(), database.WithDebug())
+	if err != nil {
+		fmt.Printf("Error in NewSetup: %s", err)
+	}
+
+	err = parcels.DistUsage(testUsageSlice, &testParcelSlice, v)
 	if err != nil {
 		t.Error("Function returned an error:", err)
 	}
@@ -68,9 +80,9 @@ func Test_ParcelPump(t *testing.T) {
 
 	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
 	wStations, _ := database.GetWeatherStations(v.PgDb)
-	cCoefficients, _ := database.GetCoeffCrops(v)
+	//cCoefficients, _ := database.GetCoeffCrops(v)
 
-	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
@@ -107,9 +119,9 @@ func Test_ParcelPumpPost97(t *testing.T) {
 
 	csResults, _ := fileio.LoadTextFiles("../testData/CropSimOutput", v.Logger)
 	wStations, _ := database.GetWeatherStations(v.PgDb)
-	cCoefficients, _ := database.GetCoeffCrops(v)
+	//cCoefficients, _ := database.GetCoeffCrops(v)
 
-	irrParcels, err := parcels.ParcelPump(v, csResults, wStations, cCoefficients)
+	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
 	}
