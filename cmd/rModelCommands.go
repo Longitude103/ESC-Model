@@ -32,13 +32,14 @@ var runModelCmd = &cobra.Command{
 		totalDepletion, _ := cmd.Flags().GetBool("TotalDep")
 		AllocAnalysis, _ := cmd.Flags().GetBool("AllocAnalysis")
 		P97Dep, _ := cmd.Flags().GetBool("P97Dep")
+		noRetire, _ := cmd.Flags().GetBool("noRetirements")
 
 		if oldGrid && mf6Grid40 {
 			pterm.Error.Println("oldGrid and mf6Grid40 are mutually exclusive")
 			return
 		}
 
-		if err := runModel(debug, &csDir, desc, sYr, eYr, ef, post97, oldGrid, mf6Grid40, totalDepletion, AllocAnalysis, P97Dep, myEnv); err != nil {
+		if err := runModel(debug, &csDir, desc, sYr, eYr, ef, post97, oldGrid, mf6Grid40, totalDepletion, AllocAnalysis, P97Dep, noRetire, myEnv); err != nil {
 			pterm.Error.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
@@ -59,46 +60,62 @@ func init() {
 	runModelCmd.Flags().BoolP("TotalDep", "t", false, "If flag set, the model will run in total depletion mode")
 	runModelCmd.Flags().BoolP("AllocAnalysis", "a", false, "If flag set, the model will run in allocation analysis mode")
 	runModelCmd.Flags().BoolP("P97Dep", "z", false, "If flag is set, the model will run in post 97 depletion analysis mode")
+	runModelCmd.Flags().BoolP("noRetirements", "r", false, "If flag is set, the model will unretire any retired parcels and put them back using net pumping")
 	_ = runModelCmd.MarkFlagRequired("CSDir")
 	_ = runModelCmd.MarkFlagRequired("Desc")
 }
 
-func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, oldGrid, mf640, totalDep, allocAnalysis, p97Dep bool, myEnv map[string]string) error {
+func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, oldGrid, mf640, totalDep, allocAnalysis, p97Dep, noRetire bool, myEnv map[string]string) error {
 	timeStart := time.Now()
 
 	pterm.Info.Println("Setting up results database")
 	var opts []database.Option
+	var flagsSet []string
 	if debug {
 		opts = append(opts, database.WithDebug())
+		flagsSet = append(flagsSet, "debug")
 	}
 
 	if eF {
 		opts = append(opts, database.WithNoExcessFlow())
+		flagsSet = append(flagsSet, "noExcessFlow")
 	}
 
 	if p97 {
 		opts = append(opts, database.WithPost97())
+		flagsSet = append(flagsSet, "post97")
 	}
 
 	if oldGrid {
 		opts = append(opts, database.WithOldGrid())
+		flagsSet = append(flagsSet, "oldGrid")
 	}
 
 	if mf640 {
 		opts = append(opts, database.WithMF640Grid())
+		flagsSet = append(flagsSet, "mf6Grid40")
 	}
 
 	if totalDep {
 		opts = append(opts, database.WithTotalDepletion())
+		flagsSet = append(flagsSet, "TotalDep")
 	}
 
 	if allocAnalysis {
 		opts = append(opts, database.WithAllocAnalysis())
+		flagsSet = append(flagsSet, "AllocAnalysis")
+	}
+
+	if noRetire {
+		opts = append(opts, database.WithNoRetirements())
+		flagsSet = append(flagsSet, "noRetirements")
 	}
 
 	if p97Dep {
 		opts = append(opts, database.WithP97Depletions())
+		opts = append(opts, database.WithNoRetirements())
 		opts = append(opts, database.WithNoExcessFlow())
+		flagsSet = append(flagsSet, "P97Dep")
 	}
 
 	v, err := database.NewSetup(myEnv, opts...)
@@ -155,6 +172,16 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 		if err := noteDb.Add(database.Note{Nt: "Includes Excess Flow Diversions"}); err != nil {
 			return err
 		}
+	}
+
+	for _, flag := range flagsSet {
+		if err := noteDb.Add(database.Note{Nt: flag}); err != nil {
+			return err
+		}
+	}
+
+	if err := noteDb.Add(database.Note{Nt: fmt.Sprintf("Crop Sim Dir: %s", *CSDir)}); err != nil {
+		return err
 	}
 
 	spinnerSuccess, _ := pterm.DefaultSpinner.Start("Reading CropSim Results files")
@@ -241,7 +268,7 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 	}
 	pterm.Success.Println("Successfully Completed WEL Results")
 
-	if v.P97Dep {
+	if v.NoRetire {
 		if err := wells.AddBackRetirements(v); err != nil {
 			return err
 		}
