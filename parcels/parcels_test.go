@@ -99,7 +99,7 @@ func TestParcel_String(t *testing.T) {
 
 func TestFilterParcelByCert(t *testing.T) {
 	sliceP := []parcels.Parcel{p1}
-	fp := parcels.FilterParcelByCert(&sliceP, "3456", false)
+	fp := parcels.FilterParcelByCert(&sliceP, "3456", false, false)
 
 	if sliceP[fp[0]].ParcelNo != 1234 {
 		t.Errorf("Didn't return correct parcel go parcel %d instead", sliceP[fp[0]].ParcelNo)
@@ -108,7 +108,7 @@ func TestFilterParcelByCert(t *testing.T) {
 
 func TestFilterParcelByCertNoneFound(t *testing.T) {
 	sliceP := []parcels.Parcel{p1}
-	fp := parcels.FilterParcelByCert(&sliceP, "6789", false)
+	fp := parcels.FilterParcelByCert(&sliceP, "6789", false, false)
 
 	if fp != nil {
 		t.Error("parcel returned when none should be")

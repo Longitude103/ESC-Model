@@ -2,15 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/AlecAivazis/survey/v2"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pterm/pterm"
 
-	"bitbucket.org/longitude-103/flogo"
+	Flogo "bitbucket.org/longitude-103/flogo"
 	"bitbucket.org/longitude-103/wwumm-esc/Utils"
 	"bitbucket.org/longitude-103/wwumm-esc/database"
 	"github.com/jmoiron/sqlx"
@@ -52,12 +54,13 @@ func makeModflowFiles() error {
 		return err
 	}
 
-	StartYear, _, err := database.GetStartEndYrs(db)
+	StartYear, EndYear, err := database.GetStartEndYrs(db)
 	if err != nil {
 		return err
 	}
 
 	startDate := time.Date(StartYear, 1, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(EndYear, 12, 1, 0, 0, 0, 0, time.UTC)
 
 	a, err := questions(db, steadyState)
 	if err != nil {
@@ -74,7 +77,7 @@ func makeModflowFiles() error {
 			return err
 		}
 
-		if err := processSSAggRCH(aggRch, "AggregateRCH", path, mDesc, startDate); err != nil {
+		if err := processSSAggRCH(aggRch, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
 			return err
 		}
 
@@ -105,14 +108,15 @@ func makeModflowFiles() error {
 			}
 		}
 
-		if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc, startDate); err != nil {
+		if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc, startDate, endDate); err != nil {
 			return err
 		}
 
 		for k := range singleWELResults {
 			if len(singleWELResults[k]) > 0 {
-				fn := fmt.Sprintf("%sWEL", k)
-				if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate); err != nil {
+				noSpaces := strings.Replace(k, " ", "_", -1)
+				fn := fmt.Sprintf("%sWEL", noSpaces)
+				if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
 					return err
 				}
 			}
@@ -120,8 +124,9 @@ func makeModflowFiles() error {
 
 		for k := range singleRCHResults {
 			if len(singleRCHResults[k]) > 0 {
-				fn := fmt.Sprintf("%sRCH", k)
-				if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate); err != nil {
+				noSpaces := strings.Replace(k, " ", "_", -1)
+				fn := fmt.Sprintf("%sRCH", noSpaces)
+				if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
 					return err
 				}
 			}
@@ -132,7 +137,7 @@ func makeModflowFiles() error {
 			return err
 		}
 
-		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc, startDate); err != nil {
+		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
 			return err
 		}
 	}
@@ -238,7 +243,7 @@ func questions(sqliteDB *sqlx.DB, steadyState bool) (Answers, error) {
 	return a, nil
 }
 
-func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName string, outputPath string, mDesc string, modelStartDate time.Time) error {
+func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName string, outputPath string, mDesc string, modelStartDate, modelEndDate time.Time) error {
 	rInterface := make([]interface {
 		Date() time.Time
 		Node() int
@@ -263,14 +268,14 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 		rInterface[i] = v
 	}
 
-	if err := Flogo.Input(wel, rch, Rc, fileName, rInterface, outputPath, mDesc, modelStartDate); err != nil {
+	if err := Flogo.Input(wel, rch, Rc, fileName, rInterface, outputPath, mDesc, modelStartDate, modelEndDate); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func processSSAggRCH(results SliceMfResults, fileName, outputPath, mDesc string, modelStartDate time.Time) error {
+func processSSAggRCH(results SliceMfResults, fileName, outputPath, mDesc string, modelStartDate, modelEndDate time.Time) error {
 	Rc := true
 	if results[0].IsNodeResult() {
 		Rc = false
@@ -298,7 +303,7 @@ func processSSAggRCH(results SliceMfResults, fileName, outputPath, mDesc string,
 	}
 
 	pterm.Info.Println("Creating RCH File")
-	if err := Flogo.Input(false, true, Rc, fileName, rInterface, outputPath, mDesc, modelStartDate); err != nil {
+	if err := Flogo.Input(false, true, Rc, fileName, rInterface, outputPath, mDesc, modelStartDate, modelEndDate); err != nil {
 		return err
 	}
 

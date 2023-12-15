@@ -87,7 +87,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 	p1.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
 	p1.Subarea = sql.NullString{String: "FA", Valid: true}
 
-	err := p1.EstimatePumping(v, cCrops)
+	err := p1.EstimatePumping(v)
 	if err != nil {
 		t.Errorf("Should not return error")
 	}
@@ -100,7 +100,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 
 	// testing that it doesn't estimate for parcels after 2016
 	p3.Yr = 2017
-	_ = p3.EstimatePumping(v, cCrops)
+	_ = p3.EstimatePumping(v)
 	want := 2.34
 	got := Utils.RoundTo(p3.Pump[6], 2)
 
@@ -110,7 +110,7 @@ func TestPumping_estimatePumping(t *testing.T) {
 
 	// testing post97 settings
 	v.Post97 = true
-	_ = p3.EstimatePumping(v, cCrops)
+	_ = p3.EstimatePumping(v)
 	want = 7.66
 	got = Utils.RoundTo(p3.Pump[6], 2)
 
