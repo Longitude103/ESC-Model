@@ -62,7 +62,7 @@ func makeModflowFiles() error {
 	startDate := time.Date(StartYear, 1, 1, 0, 0, 0, 0, time.UTC)
 	endDate := time.Date(EndYear, 12, 1, 0, 0, 0, 0, time.UTC)
 
-	a, err := questions(db, steadyState)
+	a, allWelFK, allRchFK, err := questions(db, steadyState)
 	if err != nil {
 		return err
 	}
@@ -86,9 +86,15 @@ func makeModflowFiles() error {
 	}
 
 	if !steadyState {
-		aggWel, err = database.GetAggResults(db, true, a.WellFK)
-		if err != nil {
-			return err
+		if !allWelFK {
+			aggWel, err = database.GetAggResults(db, true, a.WellFK)
+			if err != nil {
+				return err
+			}
+
+			if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc, startDate, endDate); err != nil {
+				return err
+			}
 		}
 
 		var singleWELResults = make(map[string][]database.MfResults)
@@ -106,10 +112,6 @@ func makeModflowFiles() error {
 			if err != nil {
 				return err
 			}
-		}
-
-		if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc, startDate, endDate); err != nil {
-			return err
 		}
 
 		for k := range singleWELResults {
@@ -132,13 +134,15 @@ func makeModflowFiles() error {
 			}
 		}
 
-		aggRch, err = database.GetAggResults(db, false, a.RchFK)
-		if err != nil {
-			return err
-		}
+		if !allRchFK {
+			aggRch, err = database.GetAggResults(db, false, a.RchFK)
+			if err != nil {
+				return err
+			}
 
-		if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
-			return err
+			if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -187,8 +191,10 @@ type Answers struct {
 	RowCol bool
 }
 
-func questions(sqliteDB *sqlx.DB, steadyState bool) (Answers, error) {
+func questions(sqliteDB *sqlx.DB, steadyState bool) (a Answers, AllWFK, AllRFK bool, e error) {
 	var multiQs []*survey.Question
+	var countWellFK, countRchFK int
+
 	if steadyState {
 		multiQs = []*survey.Question{
 			{
@@ -201,13 +207,17 @@ func questions(sqliteDB *sqlx.DB, steadyState bool) (Answers, error) {
 	} else {
 		wellFk, err := database.GetFileKeys(sqliteDB, true)
 		if err != nil {
-			return Answers{}, err
+			return Answers{}, false, false, err
 		}
+
+		countWellFK = len(wellFk)
 
 		rchFK, err := database.GetFileKeys(sqliteDB, false)
 		if err != nil {
-			return Answers{}, err
+			return Answers{}, false, false, err
 		}
+
+		countRchFK = len(rchFK)
 
 		// the questions to ask
 		multiQs = []*survey.Question{
@@ -234,13 +244,20 @@ func questions(sqliteDB *sqlx.DB, steadyState bool) (Answers, error) {
 		}
 	}
 
-	var a Answers
 	// ask the questions
 	if err := survey.Ask(multiQs, &a); err != nil {
-		return Answers{}, err
+		return Answers{}, false, false, err
 	}
 
-	return a, nil
+	if len(a.WellFK) == countWellFK {
+		AllWFK = true
+	}
+
+	if len(a.RchFK) == countRchFK {
+		AllRFK = true
+	}
+
+	return a, AllWFK, AllRFK, nil
 }
 
 func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName string, outputPath string, mDesc string, modelStartDate, modelEndDate time.Time) error {
