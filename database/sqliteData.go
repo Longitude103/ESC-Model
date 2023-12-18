@@ -227,6 +227,15 @@ func GetStartEndYrs(db *sqlx.DB) (SYr, EYr int, err error) {
 		}
 	}
 
+	for _, n := range rslt {
+		if len(n.Note) > 21 {
+			if strings.ToLower(n.Note[:22]) == "robust review end year" {
+				i, _ := strconv.Atoi(n.Note[len(n.Note)-4:])
+				EYr = i
+			}
+		}
+	}
+
 	if SYr == 0 || EYr == 0 {
 		return 0, 0, errors.New("could not find start/end year")
 	}
