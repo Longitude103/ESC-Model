@@ -108,14 +108,20 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 
 	if noRetire {
 		opts = append(opts, database.WithNoRetirements())
+		opts = append(opts, database.WithPermRetire())
 		flagsSet = append(flagsSet, "noRetirements")
+		flagsSet = append(flagsSet, "Permanent and temporary retirements included")
 	}
 
 	if p97Dep {
 		opts = append(opts, database.WithP97Depletions())
 		opts = append(opts, database.WithNoRetirements())
+		opts = append(opts, database.WithPermRetire())
 		opts = append(opts, database.WithNoExcessFlow())
 		flagsSet = append(flagsSet, "P97Dep")
+		flagsSet = append(flagsSet, "noRetirements")
+		flagsSet = append(flagsSet, "Permanent and temporary retirements included")
+		flagsSet = append(flagsSet, "noExcessFlow")
 	}
 
 	v, err := database.NewSetup(myEnv, opts...)
@@ -155,15 +161,12 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 		}
 	}
 
+	if err := noteDb.Add(database.Note{Nt: fmt.Sprintf("grid=%d", v.CellType())}); err != nil {
+		return err
+	}
+
 	if v.OldGrid {
-		if err := noteDb.Add(database.Note{Nt: "grid=1"}); err != nil {
-			return err
-		}
 		if err := database.AddCellsToOutput(v); err != nil { // TODO: Check, may need run for all models
-			return err
-		}
-	} else {
-		if err := noteDb.Add(database.Note{Nt: "grid=2"}); err != nil {
 			return err
 		}
 	}

@@ -1,24 +1,29 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 )
 
 type Retirement struct {
-	Id        int       `db:"id"`
-	Area      float64   `db:"area"`
-	SubArea   string    `db:"subarea"`
-	StartDate time.Time `db:"start_date"`
-	EndDate   time.Time `db:"end_date"`
-	ProjPump  float64   `db:"proj_pumping"`
+	Id        int          `db:"id"`
+	Area      float64      `db:"area"`
+	SubArea   string       `db:"subarea"`
+	StartDate time.Time    `db:"start_date"`
+	EndDate   sql.NullTime `db:"end_date"`
+	ProjPump  float64      `db:"proj_pumping"`
 	Nrd       string
 	RWells    RetirementWells
 }
 
 func (r Retirement) IsExpired(year int) bool {
-	return r.EndDate.Before(time.Date(year, time.July, 1, 0, 0, 0, 0, time.UTC))
+	if !r.EndDate.Valid {
+		return false
+	}
+
+	return r.EndDate.Time.Before(time.Date(year, time.July, 1, 0, 0, 0, 0, time.UTC))
 }
 
 func (r Retirement) ToSqliteWelResults(year int, fullCorn bool) SqliteWelResults {
@@ -90,7 +95,13 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 	}
 
 	npRetirements := Retirements{}
-	selectStmt := fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from np.t%[1]d_dry inner join np.retirements on t%[1]d_dry.retirement = retirements.id inner join np.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
+	var selectStmt string
+	if v.PermRetire {
+		selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from np.t%[1]d_dry inner join np.retirements on t%[1]d_dry.retirement = retirements.id inner join np.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true;", year)
+	} else {
+		selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from np.t%[1]d_dry inner join np.retirements on t%[1]d_dry.retirement = retirements.id inner join np.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
+	}
+
 	if err := v.PgDb.Select(&npRetirements, selectStmt); err != nil {
 		return retirements, err
 	}
@@ -100,7 +111,12 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 	}
 
 	spRetirements := Retirements{}
-	selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from sp.t%[1]d_dry inner join sp.retirements on t%[1]d_dry.retirement = retirements.id inner join sp.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
+	if v.PermRetire {
+		selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from sp.t%[1]d_dry inner join sp.retirements on t%[1]d_dry.retirement = retirements.id inner join sp.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true;", year)
+	} else {
+		selectStmt = fmt.Sprintf("select retirements.id, st_area(geom)/43560 area, retirements.subarea, start_date, end_date, proj_pumping from sp.t%[1]d_dry inner join sp.retirements on t%[1]d_dry.retirement = retirements.id inner join sp.retirement_pumping on retirements.subarea = retirement_pumping.subarea where retirements.id > 1 and sw = false and gw = true and permanent = false;", year)
+	}
+
 	if err := v.PgDb.Select(&spRetirements, selectStmt); err != nil {
 		return retirements, err
 	}
@@ -112,9 +128,9 @@ func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err 
 	return retirements, nil
 }
 
-func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) {
+func GetRetirementWells(v *Setup) (rWells RetirementWells, err error) {
 	npWells := RetirementWells{}
-	query := fmt.Sprintf("select retirement, well, node from np.retirements_jct inner join np.npnrd_wells on well = npnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, npnrd_wells.geom) where mc.cell_type = %d;", grid)
+	query := fmt.Sprintf("select retirement, well, node from np.retirements_jct inner join np.npnrd_wells on well = npnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, npnrd_wells.geom) where mc.cell_type = %d;", v.CellType())
 	if err := v.PgDb.Select(&npWells, query); err != nil {
 		return rWells, err
 	}
@@ -124,7 +140,7 @@ func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) 
 	}
 
 	spWells := RetirementWells{}
-	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.spnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", grid)
+	query = fmt.Sprintf("select retirement, well, node from sp.retirements_jct inner join sp.spnrd_wells on well = spnrd_wells.wellid inner join model_cells mc on st_contains(mc.geom, spnrd_wells.geom) where mc.cell_type = %d;", v.CellType())
 	if err := v.PgDb.Select(&spWells, query); err != nil {
 		return rWells, err
 	}
@@ -137,9 +153,9 @@ func GetRetirementWells(v *Setup, grid int) (rWells RetirementWells, err error) 
 	return rWells, nil
 }
 
-func GetRetirements(v *Setup, grid int, rYears []int) (allRetirements map[int]Retirements, err error) {
+func GetRetirements(v *Setup, rYears []int) (allRetirements map[int]Retirements, err error) {
 	allRetirements = make(map[int]Retirements)
-	allRetirementWells, err := GetRetirementWells(v, grid)
+	allRetirementWells, err := GetRetirementWells(v)
 
 	if err != nil {
 		return allRetirements, err
@@ -165,8 +181,8 @@ func GetRetirements(v *Setup, grid int, rYears []int) (allRetirements map[int]Re
 	return allRetirements, nil
 }
 
-func GetOneYearRetirements(v *Setup, grid int, year int) (Retirements, error) {
-	allRetirementWells, err := GetRetirementWells(v, grid)
+func GetOneYearRetirements(v *Setup, year int) (Retirements, error) {
+	allRetirementWells, err := GetRetirementWells(v)
 	singleYrRetirements, err := GetSingleYearRetirements(v, year)
 	if err != nil {
 		if err.Error() == "year must be 2008 through 2020" {

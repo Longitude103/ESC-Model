@@ -8,13 +8,8 @@ func AddBackRetirements(v *database.Setup) error {
 		startYear = v.SYear
 	}
 
-	grid := 2
-	if v.OldGrid {
-		grid = 1
-	}
-
 	for y := startYear; y < v.EYear+1; y++ {
-		retirements, err := database.GetOneYearRetirements(v, grid, y)
+		retirements, err := database.GetOneYearRetirements(v, y)
 		if err != nil {
 			v.Logger.Errorf("Error getting retirements for year %d: %s", y, err)
 			return err

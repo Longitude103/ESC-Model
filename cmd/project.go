@@ -83,6 +83,13 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	v.Logger = l
 	v.SlDb = db
 
+	switch grid {
+	case 1:
+		v.OldGrid = true
+	case 3:
+		v.MF640Grid = true
+	}
+
 	v.Logger.Info("Using Results Database: " + dbString)
 
 	// sqlite database
@@ -114,7 +121,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 
 	// get retirement data
 	spin.UpdateText("Getting Retirement Data")
-	retirementData, err := database.GetRetirements(&v, grid, years.AllYears())
+	retirementData, err := database.GetRetirements(&v, years.AllYears())
 	if err != nil {
 		log.Printf("Error getting retirement data: %s", err)
 		return err
