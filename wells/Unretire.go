@@ -16,7 +16,7 @@ func AddBackRetirements(v *database.Setup) error {
 		}
 
 		for i := 0; i < len(retirements); i++ {
-			if err := database.AddWelRecords(v.SlDb, retirements[i].ToSqliteWelResults(y, true)); err != nil {
+			if err := database.AddWelRecords(v.SlDb, retirements[i].ToSqliteWelResults(y, false)); err != nil {
 				v.Logger.Errorf("Error adding retirements for year %d: %s", y, err)
 				continue
 			}
