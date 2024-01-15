@@ -28,7 +28,7 @@ func GetResults(db *sqlx.DB, year int) (SqliteResults, error) {
 	}
 
 	var results SqliteResults
-	query := fmt.Sprintf("SELECT * FROM results WHERE dt >= '%s' AND dt <= '%s' AND file_type NOT IN (124, 116);",
+	query := fmt.Sprintf("SELECT * FROM results WHERE dt >= '%s' AND dt <= '%s' AND file_type NOT IN (124, 116, 221, 222);",
 		time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 		time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"))
 
