@@ -73,7 +73,7 @@ func WriteWELResults(v *database.Setup, parcels *[]parcels.Parcel) error {
 	return nil
 }
 
-// filterWells is a function to filter out the wells by an nrd and parcel number and returns a slice of wells that
+// filterWells is a function to filter out the wells by a nrd and parcel number and returns a slice of wells that
 // supply that parcel
 func filterWells(wlPar []database.WellParcel, parcel int, nrd string, yr int) (wells []int, count int, err error) {
 	for i := 0; i < len(wlPar); i++ {
@@ -106,17 +106,16 @@ func addToResults(wellNode []database.WellNode, r []database.WelAnnualResult, we
 		return r, err
 	}
 
+	ft, err := p.SetWelFileType()
+	if err != nil {
+		return r, err
+	}
 	// if the well is there, then just add the value
-	if found, local := findResult(r, well, p.Yr); found {
+	if found, local := findResult(r, well, p.Yr, ft); found {
 		// use local and call add
 		r[local].AddPumping(p.Pump, float64(count))
 	} else {
 		// Otherwise, create a new well and add it to the slice
-		ft, err := p.SetWelFileType()
-		if err != nil {
-			return r, err
-		}
-
 		var result [12]float64
 		for i, d := range p.Pump {
 			result[i] = d / float64(count)
@@ -130,9 +129,9 @@ func addToResults(wellNode []database.WellNode, r []database.WelAnnualResult, we
 
 // findResult is a function to find if there is a slice of database.WelAnnualResult that has a well and year and returns a
 // bool if it is found and a location in the slice that it is located
-func findResult(r []database.WelAnnualResult, well int, yr int) (found bool, location int) {
+func findResult(r []database.WelAnnualResult, well int, yr int, ft int) (found bool, location int) {
 	for i := 0; i < len(r); i++ {
-		if r[i].Wellid == well && r[i].Yr == yr {
+		if r[i].Wellid == well && r[i].Yr == yr && r[i].FileType == ft {
 			return true, i
 		}
 	}
