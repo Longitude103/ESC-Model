@@ -258,6 +258,22 @@ func GetSteadyState(db *sqlx.DB) (bool, error) {
 	return false, nil
 }
 
+// GetNoRetirement returns whether the retirement flag is set in the results database
+func GetNoRetirement(db *sqlx.DB) (bool, error) {
+	rslt, err := getAllDBResults(db)
+	if err != nil {
+		return false, err
+	}
+
+	for _, n := range rslt {
+		if n.Note == "noRetirements" {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func getAllDBResults(db *sqlx.DB) ([]ResultsNote, error) {
 	var rslt []ResultsNote
 	query := "SELECT * FROM results_notes"

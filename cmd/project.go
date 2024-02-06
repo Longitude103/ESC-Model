@@ -65,6 +65,11 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		return err
 	}
 
+	noRetirements, err := database.GetNoRetirement(db)
+	if err != nil {
+		return err
+	}
+
 	path, fileName, err := Utils.MakeOutputDir("qc")
 	if err != nil {
 		return err
@@ -107,7 +112,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 			return err
 		}
 
-		wRes, err := database.GetWelResults(db, year)
+		wRes, err := database.GetWelResults(db, year, noRetirements)
 		if err != nil {
 			log.Printf("Error querying data: %s", err)
 			return err

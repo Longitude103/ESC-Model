@@ -54,13 +54,18 @@ func (r *SqliteWelResult) ChangeYear(year int) {
 
 type SqliteWelResults []SqliteWelResult
 
-func GetWelResults(db *sqlx.DB, year int) (SqliteWelResults, error) {
+func GetWelResults(db *sqlx.DB, year int, noRetirements bool) (SqliteWelResults, error) {
 	if year < 1953 || year > 2020 {
 		return nil, errors.New("year must be between 1953 and 2020")
 	}
 
 	var results SqliteWelResults
-	query := fmt.Sprintf("SELECT * FROM wel_results WHERE dt >= '%s' AND dt <= '%s' AND file_type NOT IN (221, 222);",
+	qryStr := "SELECT * FROM wel_results WHERE dt >= '%s' AND dt <= '%s' AND file_type NOT IN (221, 222);"
+	if noRetirements {
+		qryStr = "SELECT * FROM wel_results WHERE dt >= '%s' AND dt <= '%s';"
+	}
+
+	query := fmt.Sprintf(qryStr,
 		time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 		time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"))
 
