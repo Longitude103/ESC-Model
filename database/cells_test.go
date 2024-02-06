@@ -3,6 +3,7 @@ package database_test
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"os"
 	"testing"
 
@@ -68,6 +69,103 @@ func TestGetSSCellAreas1(t *testing.T) {
 
 	if want.CellArea != got.CellArea {
 		t.Errorf("wanted CellArea %f but got CellArea %f", want.CellArea, got.CellArea)
+	}
+}
+
+func TestGetCellAreas(t *testing.T) {
+	v, err := getTestDBConn()
+	if err != nil {
+		t.Error("error in database setup", err)
+	}
+
+	v.MF640Grid = true
+
+	cells, err := database.GetCellAreas(v, 2019)
+	if err != nil {
+		t.Error("error in getting cells from db", err)
+	}
+
+	want := database.CellIntersect{
+		Node:     6044,
+		Soil:     622,
+		CZone:    2,
+		CellArea: 40,
+		NpIrrArea: sql.NullFloat64{
+			Float64: 25.43987,
+			Valid:   true,
+		},
+	}
+
+	var got database.CellIntersect
+	for _, c := range cells {
+		if c.Node == 6044 {
+			got = c
+		}
+	}
+
+	if want.Soil != got.Soil {
+		t.Errorf("wanted soil %d but got soil %d", want.Soil, got.Soil)
+	}
+
+	if want.CZone != got.CZone {
+		t.Errorf("wanted CZone %d but got CZone %d", want.CZone, got.CZone)
+	}
+
+	if want.CellArea != got.CellArea {
+		t.Errorf("wanted CellArea %f but got CellArea %f", want.CellArea, got.CellArea)
+	}
+
+	if math.Round(want.NpIrrArea.Float64*100)/100 != math.Round(got.NpIrrArea.Float64*100)/100 {
+		t.Errorf("wanted NpIrrArea %f but got NpIrrArea %f", want.NpIrrArea.Float64, got.NpIrrArea.Float64)
+	}
+}
+
+func TestGetCellAreasP97(t *testing.T) {
+	v, err := getTestDBConn()
+	if err != nil {
+		t.Error("error in database setup", err)
+	}
+
+	v.MF640Grid = true
+	v.Post97 = true
+
+	cells, err := database.GetCellAreas(v, 2019)
+	if err != nil {
+		t.Error("error in getting cells from db", err)
+	}
+
+	want := database.CellIntersect{
+		Node:     6044,
+		Soil:     622,
+		CZone:    2,
+		CellArea: 40,
+		NpIrrArea: sql.NullFloat64{
+			Float64: 0,
+			Valid:   false,
+		},
+	}
+
+	var got database.CellIntersect
+	for _, c := range cells {
+		if c.Node == 6044 {
+			got = c
+		}
+	}
+
+	if want.Soil != got.Soil {
+		t.Errorf("wanted soil %d but got soil %d", want.Soil, got.Soil)
+	}
+
+	if want.CZone != got.CZone {
+		t.Errorf("wanted CZone %d but got CZone %d", want.CZone, got.CZone)
+	}
+
+	if want.CellArea != got.CellArea {
+		t.Errorf("wanted CellArea %f but got CellArea %f", want.CellArea, got.CellArea)
+	}
+
+	if want.NpIrrArea.Valid != got.NpIrrArea.Valid {
+		t.Errorf("wanted NpIrrArea %f but got NpIrrArea %f", want.NpIrrArea.Float64, got.NpIrrArea.Float64)
 	}
 }
 

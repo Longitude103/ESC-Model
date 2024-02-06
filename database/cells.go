@@ -74,7 +74,7 @@ func GetCells(v *Setup) (cells []ModelCell, err error) {
 // debug mode to only return 200 cells which were selected as having good data.
 func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
 	query := fmt.Sprintf(`select node, soil_code, coeff_zone, mtg, cell_area, pointx, pointy, nip_area, ndp_area, 
-							sip_area, sdp_area from getCellAcres(%d, %d);`, y, v.CellType())
+							sip_area, sdp_area from getCellAcres(%d, %d, %t);`, y, v.CellType(), v.Post97)
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
