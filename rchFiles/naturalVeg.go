@@ -35,7 +35,7 @@ func NaturalVeg(v *database.Setup, wStations []database.WeatherStation,
 
 			for m := 0; m < 12; m++ {
 				cellResult = append(cellResult, database.RchResult{Node: cells[i].Node, Size: cells[i].CellArea,
-					Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: 102})
+					Dt: time.Date(yr, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC), FileType: cells[i].GetNaturalVegFileType()})
 			}
 
 			dist, err := database.Distances(cells[i], wStations)

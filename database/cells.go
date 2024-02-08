@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 
 	"bitbucket.org/longitude-103/gisUtils"
 )
@@ -22,6 +23,11 @@ type ModelCell struct {
 	Clm       int     `db:"clm"`
 }
 
+type CellNRD struct {
+	Nrd  string `db:"nrd"`
+	Node int    `db:"node"`
+}
+
 type CellIntersect struct {
 	Node      int             `db:"node"`
 	Soil      int             `db:"soil_code"`
@@ -34,6 +40,7 @@ type CellIntersect struct {
 	SpDryArea sql.NullFloat64 `db:"sdp_area"`
 	PointX    float64         `db:"pointx"`
 	PointY    float64         `db:"pointy"`
+	Nrd       string
 }
 
 type StDistances struct {
@@ -78,6 +85,15 @@ func GetCellAreas(v *Setup, y int) (cells []CellIntersect, err error) {
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
+	}
+
+	cellNRDs, err := GetCellNRDs(v)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(cells); i++ {
+		cells[i].Nrd = cellNRDs[cells[i].Node]
 	}
 
 	// if v.AppDebug {
@@ -166,6 +182,17 @@ func (c CellIntersect) GetLossFactor() float64 {
 	return math.Min(1-math.Exp(-0.02*c.Mtg.Float64), 1)
 }
 
+func (c CellIntersect) GetNaturalVegFileType() int {
+	switch strings.ToLower(c.Nrd) {
+	case "np":
+		return 126
+	case "sp":
+		return 127
+	default:
+		return 102
+	}
+}
+
 func AddCellsToOutput(v *Setup) error {
 	c, err := CellRCDB(v.SlDb)
 	if err != nil {
@@ -211,6 +238,24 @@ func GetSSCellAreas2(v *Setup) (cells []CellIntersect, err error) {
 
 	if err = v.PgDb.Select(&cells, query); err != nil {
 		return nil, err
+	}
+
+	return cells, nil
+}
+
+func GetCellNRDs(v *Setup) (map[int]string, error) {
+	qry := fmt.Sprintf(`select c.node, hsu.nrd from public.model_cells c 
+    inner join hsu_zones hsu on public.st_intersects(c.geom, hsu.geom) where c.cell_type = %d;`, v.CellType())
+
+	var dbCells []CellNRD
+	var err error
+	if err = v.PgDb.Select(&dbCells, qry); err != nil {
+		return nil, err
+	}
+
+	cells := make(map[int]string)
+	for _, dbCell := range dbCells {
+		cells[dbCell.Node] = dbCell.Nrd
 	}
 
 	return cells, nil
