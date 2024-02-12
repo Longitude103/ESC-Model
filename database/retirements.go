@@ -90,8 +90,8 @@ type RetirementWells []RetirementWell
 
 func GetSingleYearRetirements(v *Setup, year int) (retirements Retirements, err error) {
 	// only for years 2014 through 2020
-	if year < 2008 {
-		return retirements, errors.New("year must be 2008 through 2020")
+	if year < 1998 {
+		return retirements, errors.New("year must be 1998 through 2020")
 	}
 
 	npRetirements := Retirements{}
@@ -185,7 +185,7 @@ func GetOneYearRetirements(v *Setup, year int) (Retirements, error) {
 	allRetirementWells, err := GetRetirementWells(v)
 	singleYrRetirements, err := GetSingleYearRetirements(v, year)
 	if err != nil {
-		if err.Error() == "year must be 2008 through 2020" {
+		if err.Error() == "year must be 1998 through 2020" {
 			v.Logger.Errorf("Year %d is not a valid retirement year, skipped", year)
 			return Retirements{}, nil
 		} else {

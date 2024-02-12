@@ -3,7 +3,7 @@ package wells
 import "bitbucket.org/longitude-103/wwumm-esc/database"
 
 func AddBackRetirements(v *database.Setup) error {
-	startYear := 2000
+	startYear := 1998
 	if v.SYear > startYear {
 		startYear = v.SYear
 	}
