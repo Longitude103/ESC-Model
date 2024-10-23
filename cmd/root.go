@@ -3,8 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var user User
@@ -51,8 +52,8 @@ func initConfig() {
 			myEnv["user"] = user.Username
 			myEnv["password"] = user.Password
 			myEnv["port"] = "5432"
-			myEnv["host"] = "long103-wwum.clmtjoquajav.us-east-2.rds.amazonaws.com"
-			myEnv["dbname"] = "wwum"
+			myEnv["host"] = "pgsql.long103.com"
+			myEnv["dbname"] = "wwumm"
 		}
 	}
 
