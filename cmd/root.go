@@ -52,7 +52,7 @@ func initConfig() {
 			myEnv["user"] = user.Username
 			myEnv["password"] = user.Password
 			myEnv["port"] = "5432"
-			myEnv["host"] = "pgsql.long103.com"
+			myEnv["host"] = "pgsql-prd.long103.com"
 			myEnv["dbname"] = "wwumm"
 		}
 	}
