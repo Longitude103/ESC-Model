@@ -9,9 +9,19 @@ and the binaries are compiled with [![GitHub go.mod Go version of a Go module](h
 
 ## Database
 
-The CLI uses the WWUM postgres database hosted on [Amazon Web Services RDS](https://aws.amazon.com/rds/?nc2=h_ql_prod_db_rds) using
-a Postgresql database. The postgresql database uses the [PostGIS](https://postgis.net/) extension to calculate the spatial
-components of the data.
+The CLI uses the WWUM postgres database hosted on a [Linode (Akamai) managed PostgreSQL](https://www.linode.com/products/postgresql/)
+server. The postgresql database uses the [PostGIS](https://postgis.net/) extension to calculate the spatial
+components of the data. Connections require SSL.
+
+Before running any other command, save your database login with `init`. Each office has its own login:
+
+```
+EscModel init -u <username> -p <password>
+```
+
+This writes a `.configjson` file next to the executable. The host, port, database name and SSL mode default to the WWUMM
+server; override them with `--host`, `--port`, `--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a
+local development database).
 
 ## CLI functions
 
