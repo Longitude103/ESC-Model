@@ -13,8 +13,8 @@ import (
 	"github.com/pterm/pterm"
 
 	Flogo "bitbucket.org/longitude-103/flogo"
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/jmoiron/sqlx"
 )
 

@@ -1,9 +1,9 @@
 package fileio
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/logging"
 	"bufio"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/logging"
 	"os"
 	"path/filepath"
 	"strconv"

@@ -1,6 +1,6 @@
 package wells
 
-import "bitbucket.org/longitude-103/wwumm-esc/database"
+import "github.com/Longitude103/ESC-Model/database"
 
 func AddBackRetirements(v *database.Setup) error {
 	startYear := 1998

@@ -4,15 +4,15 @@ import (
 	"database/sql"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels"
 )
 
 var (
 	wr1 = database.WelAnnualResult{Wellid: 123, Node: 1, Yr: 2021, FileType: 204, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr2 = database.WelAnnualResult{Wellid: 124, Node: 1, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr3 = database.WelAnnualResult{Wellid: 125, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
-	wr4 = database.WelAnnualResult{Wellid: 126, Node: 2, Yr: 2021, FileType: 201, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr2 = database.WelAnnualResult{Wellid: 124, Node: 1, Yr: 2021, FileType: 204, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr3 = database.WelAnnualResult{Wellid: 125, Node: 2, Yr: 2021, FileType: 204, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
+	wr4 = database.WelAnnualResult{Wellid: 126, Node: 2, Yr: 2021, FileType: 204, Result: [12]float64{0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}}
 
 	wrSlice = []database.WelAnnualResult{wr1, wr2, wr3, wr4}
 
@@ -43,17 +43,17 @@ func Test_findResult(t *testing.T) {
 		t.Errorf("should have found a result and the location should have been zero; found: %t, location: %d\n", found, location)
 	}
 
-	found, location = findResult(wrSlice, 126, 2021, 201)
+	found, location = findResult(wrSlice, 126, 2021, 204)
 	if found != true || location != 3 {
 		t.Errorf("should have found the well and location; found %t, location %d\n", found, location)
 	}
 
-	found, location = findResult(wrSlice, 124, 2020, 201)
+	found, location = findResult(wrSlice, 124, 2020, 204)
 	if found == true || location != 0 {
 		t.Errorf("should have not found the well and location; found %t, location %d\n", found, location)
 	}
 
-	found, location = findResult(wrSlice, 127, 2021, 201)
+	found, location = findResult(wrSlice, 127, 2021, 204)
 	if found == true || location != 0 {
 		t.Errorf("should have not found the well and location; found %t, location %d\n", found, location)
 	}

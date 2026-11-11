@@ -3,7 +3,7 @@ package conveyLoss
 import "testing"
 
 func Test_Conveyance(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 
 	v.SYear = 1953
 	v.EYear = 1953

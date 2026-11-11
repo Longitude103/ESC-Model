@@ -1,5 +1,13 @@
 version = 1.6.15
 
+.PHONY: test vet build build-win
+
+test:
+	go test ./...
+
+vet:
+	go vet ./...
+
 build-win:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc go build -o bin/wwumm-amd64-win_v$(version).exe
 

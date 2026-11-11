@@ -2,19 +2,18 @@ package wells
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/joho/godotenv"
 )
 
-func dbConnection() *database.Setup {
+func dbConnection(t testing.TB) *database.Setup {
+	t.Helper()
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *database.Setup
@@ -43,7 +42,7 @@ func (s *sqlResults) Add(value interface{}) error {
 func Test_MunicipalIndWells(t *testing.T) {
 	sR := &sqlResults{}
 
-	if err := MunicipalIndWells(dbConnection(), sR); err != nil {
+	if err := MunicipalIndWells(dbConnection(t), sR); err != nil {
 		t.Error("Error in function")
 	}
 

@@ -1,10 +1,10 @@
 package rchFiles
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"database/sql/driver"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"github.com/jmoiron/sqlx"
 	"testing"
 	"time"
@@ -39,17 +39,6 @@ func (a AnyTime) Match(v driver.Value) bool {
 }
 
 func Test_dryland(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
-	//sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
-
-	rows := sqlmock.NewRows([]string{"node", "c_area", "d_area", "parcel_id", "nrd"}).AddRow(1, 40, 5, 101, "sp").AddRow(2, 40, 5, 102, "sp")
-
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-
 	mockSqliteDB, mockSqlite, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -66,6 +55,7 @@ func Test_dryland(t *testing.T) {
 	mockSqlite.ExpectCommit()
 	//mockSqlite.ExpectExec("INSERT INTO results").WithArgs(1, AnyTime{}, 101, 0)
 
+	// TODO: re-enable once Dryland can be driven from a mocked Postgres connection.
 	//v := database.Setup{SYear: 2014, EYear: 2014, RchDb: rchDB, PgDb: sqlxDB}
 	//if err2 := Dryland(v, sliceDryParcels); err2 != nil {
 	//	t.Errorf("Error in dryland function: %s", err2)
@@ -73,11 +63,6 @@ func Test_dryland(t *testing.T) {
 
 	if err3 := rchDB.Flush(); err3 != nil {
 		t.Errorf("error flushing rchdb: %s", err3)
-	}
-
-	// we make sure that all expectations were met
-	if err4 := mock.ExpectationsWereMet(); err4 != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err4)
 	}
 
 	if err5 := mockSqlite.ExpectationsWereMet(); err5 != nil {

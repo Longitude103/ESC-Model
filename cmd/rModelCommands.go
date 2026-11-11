@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
-	"bitbucket.org/longitude-103/wwumm-esc/rchFiles"
-	"bitbucket.org/longitude-103/wwumm-esc/wells"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/parcels"
+	"github.com/Longitude103/ESC-Model/rchFiles"
+	"github.com/Longitude103/ESC-Model/wells"
 	"github.com/pterm/pterm"
 )
 

@@ -15,7 +15,8 @@ type lg interface {
 }
 
 // GetSqlite gets or sets the connection string for the sqlite3 results database.
-//  It takes no args, and returns the db object for the connection
+//
+//	It takes no args, and returns the db object for the connection
 func GetSqlite(logger lg, path string, fileName string) (*sqlx.DB, error) {
 	dbName := fmt.Sprintf("results%s.sqlite", fileName)
 

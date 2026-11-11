@@ -1,10 +1,10 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"database/sql"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"testing"
 )
 
@@ -79,7 +79,7 @@ func TestPumping_adjustmentFactor(t *testing.T) {
 }
 
 func TestPumping_estimatePumping(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 
 	//zero pumping
 	p1.Pump = [12]float64{}

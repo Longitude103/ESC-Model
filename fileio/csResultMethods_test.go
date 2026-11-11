@@ -2,20 +2,19 @@ package fileio_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
 	"github.com/joho/godotenv"
 )
 
-func dbConnection() *database.Setup {
+func dbConnection(t testing.TB) *database.Setup {
+	t.Helper()
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *database.Setup
@@ -32,7 +31,7 @@ func dbConnection() *database.Setup {
 }
 
 func TestAverageStationsResults(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SteadyState = true
 
 	csResults, err := fileio.LoadTextFiles("../testData/CropSimOutput/", v.Logger)

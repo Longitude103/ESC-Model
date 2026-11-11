@@ -7,7 +7,7 @@ import (
 )
 
 func Test_getDiversions(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 
 	v.SYear = 1953
 	v.EYear = 1953
@@ -50,7 +50,7 @@ func Test_getDiversions(t *testing.T) {
 }
 
 func Test_getDiversionsSS(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	_ = v.SetYears(1895, 1905)
 	v.SteadyState = true
 
@@ -71,7 +71,7 @@ func Test_getDiversionsSS(t *testing.T) {
 }
 
 func Test_getEFDiversions(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	if err := v.SetYears(2011, 2020); err != nil {
 		t.Error("Failed to set years")
 	}

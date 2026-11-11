@@ -1,10 +1,10 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"database/sql"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"strings"
 	"testing"
 )
@@ -59,7 +59,7 @@ var p12 = parcels.Parcel{ParcelNo: 159988, AppEff: 0.65,
 	Sw: sql.NullBool{Bool: false, Valid: true}, Gw: sql.NullBool{Bool: true, Valid: true}}
 
 func TestParcel_WaterBalanceWWSP(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p10.Ro)
@@ -77,7 +77,7 @@ func TestParcel_WaterBalanceWWSP(t *testing.T) {
 }
 
 func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p11.Ro)
 	fmt.Println("Dp is:", p11.Dp)
@@ -93,7 +93,7 @@ func TestParcel_WaterBalanceWWSP_SWOnly(t *testing.T) {
 }
 
 func TestParcel_WaterBalanceWWSP_GWOnly(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	fmt.Println(strings.Repeat("=", 120))
 	fmt.Println("RO is:", p12.Ro)
 	fmt.Println("Dp is:", p12.Dp)

@@ -4,20 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
-	"os"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/joho/godotenv"
 )
 
-func getTestDBConn() (*database.Setup, error) {
+func getTestDBConn(t testing.TB) (*database.Setup, error) {
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *database.Setup
@@ -35,7 +33,7 @@ func getTestDBConn() (*database.Setup, error) {
 }
 
 func TestGetSSCellAreas1(t *testing.T) {
-	v, err := getTestDBConn()
+	v, err := getTestDBConn(t)
 	if err != nil {
 		t.Error("error in database setup", err)
 	}
@@ -73,7 +71,7 @@ func TestGetSSCellAreas1(t *testing.T) {
 }
 
 func TestGetCellAreas(t *testing.T) {
-	v, err := getTestDBConn()
+	v, err := getTestDBConn(t)
 	if err != nil {
 		t.Error("error in database setup", err)
 	}
@@ -121,7 +119,7 @@ func TestGetCellAreas(t *testing.T) {
 }
 
 func TestGetCellAreasP97(t *testing.T) {
-	v, err := getTestDBConn()
+	v, err := getTestDBConn(t)
 	if err != nil {
 		t.Error("error in database setup", err)
 	}
@@ -170,7 +168,7 @@ func TestGetCellAreasP97(t *testing.T) {
 }
 
 func TestGetSSCellAreas2(t *testing.T) {
-	v, err := getTestDBConn()
+	v, err := getTestDBConn(t)
 	if err != nil {
 		t.Error("error in database setup", err)
 	}

@@ -12,4 +12,4 @@ We used the MinGW program for the GCC compiler. This was downloaded and installe
 - Open the PowerShell App from the start menu and navigate to the dir with the source code
 - To navigate to Z dir type: `Z:\` in prompt
 - Navigate to the directory with source files
-- Run `go build -o bin/wwum2020-amd64-windows.exe` in the prompt
+- Run `go build -o bin/wwumm-amd64-win.exe` in the prompt
