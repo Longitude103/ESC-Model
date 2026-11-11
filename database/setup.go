@@ -158,17 +158,20 @@ func WithSteadyState(startYr, endYr int) Option {
 
 // SetYears is an initializer method for the Setup struct to set the start and end years of the application run.
 func (s *Setup) SetYears(sYear, eYear int) error {
-	if sYear > 1953 || sYear < time.Now().Year() {
-		s.SYear = sYear
-	} else {
+	if sYear < 1953 || sYear >= time.Now().Year() {
 		return errors.New("start year out of range")
 	}
 
-	if eYear > 1953 && eYear < time.Now().Year() {
-		s.EYear = eYear
-	} else {
+	if eYear < 1953 || eYear >= time.Now().Year() {
 		return errors.New("end year out of range")
 	}
+
+	if sYear > eYear {
+		return errors.New("start year cannot be after end year")
+	}
+
+	s.SYear = sYear
+	s.EYear = eYear
 
 	return nil
 }

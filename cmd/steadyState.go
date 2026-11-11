@@ -173,6 +173,7 @@ func runSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, o
 	irrParcels, err := parcels.ParcelPumpSS(v, avgCSResults, wStations, cCoefficients)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
+		return err
 	}
 	pterm.Success.Println("Successfully Completed Parcel Pumping")
 

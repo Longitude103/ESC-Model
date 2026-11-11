@@ -66,7 +66,7 @@ func GetWellParcels(v *Setup) ([]WellParcel, error) {
 		return wellParcels, errors.New("error getting parcel wells from db function")
 	}
 
-	if v.AppDebug {
+	if v.AppDebug && len(wellParcels) > 50 {
 		return wellParcels[:50], nil
 	}
 
@@ -136,7 +136,7 @@ func GetWellNode(v *Setup) (wellNodes []WellNode, err error) {
 		return wellNodes, errors.New("error getting well node locations from DB")
 	}
 
-	if v.AppDebug {
+	if v.AppDebug && len(wellNodes) > 50 {
 		return wellNodes[:50], nil
 	}
 
