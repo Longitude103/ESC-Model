@@ -29,8 +29,18 @@ func Dryland(v *database.Setup, dryParcels []parcels.Parcel, cCData []database.C
 		}
 
 		p.UpdateTitle(fmt.Sprintf("Writing %d values to DB", y))
+		parcelIdx := indexParcels(annParcels)
 		for i := 0; i < len(dryCells); i++ {
-			parcelArea, rf, err := parcelValues(annParcels, int(dryCells[i].PId), dryCells[i].Nrd, dryCells[i].GetLossFactor(), cCData)
+			rows, ok := parcelIdx[parcelKey{id: int(dryCells[i].PId), nrd: dryCells[i].Nrd}]
+			if !ok {
+				err := errors.New("parcel not found")
+				v.Logger.Errorf("Dryland RCH parcelValues error, year: %d, parcel_id: %d, nrd: %s", y,
+					int(dryCells[i].PId), dryCells[i].Nrd)
+				return err
+			}
+
+			row, parcelArea, _ := cellParcelRow(rows, dryCells[i].Soil, dryCells[i].CZone)
+			rf, err := parcelValues(row, dryCells[i].GetLossFactor(), cCData)
 			if err != nil {
 				v.Logger.Errorf("Dryland RCH parcelValues error, year: %d, parcel_id: %d, nrd: %s", y,
 					int(dryCells[i].PId), dryCells[i].Nrd)
@@ -54,26 +64,21 @@ func Dryland(v *database.Setup, dryParcels []parcels.Parcel, cCData []database.C
 	return nil
 }
 
-// parcelValues is a function that returns the area of the parcel and the monthly return flow (rf) values for processing.
-func parcelValues(p []parcels.Parcel, id int, nrd string, lossFactor float64, cCData []database.CoeffCrop) (area float64, rf [12]float64, err error) {
-	for i := 0; i < len(p); i++ {
-		if p[i].ParcelNo == id && p[i].Nrd == nrd {
-			etAdj, etAdjToRo, perToRch, aDp, aRo, err := database.FilterCCDryLand(cCData, p[i].CoeffZone, int(p[i].Crop1.Int64))
-			if err != nil {
-				return p[i].Area, rf, err
-			}
-
-			for m := 0; m < 12; m++ {
-				diffRo, diffDp := calcDiffEt(p[i].Et[m], etAdj, etAdjToRo)
-				_, roToRch := calcRoDryland(p[i].Ro[m], diffRo, aRo, lossFactor, perToRch)
-
-				rf[m] = calcDpDryland(p[i].Dp[m], diffDp, roToRch, aDp)
-			}
-			return p[i].Area, rf, nil
-		}
+// parcelValues is a function that returns the monthly return flow (rf) values of a parcel row for processing.
+func parcelValues(p parcels.Parcel, lossFactor float64, cCData []database.CoeffCrop) (rf [12]float64, err error) {
+	etAdj, etAdjToRo, perToRch, aDp, aRo, err := database.FilterCCDryLand(cCData, p.CoeffZone, int(p.Crop1.Int64))
+	if err != nil {
+		return rf, err
 	}
 
-	return 0, rf, errors.New("parcel not found")
+	for m := 0; m < 12; m++ {
+		diffRo, diffDp := calcDiffEt(p.Et[m], etAdj, etAdjToRo)
+		_, roToRch := calcRoDryland(p.Ro[m], diffRo, aRo, lossFactor, perToRch)
+
+		rf[m] = calcDpDryland(p.Dp[m], diffDp, roToRch, aDp)
+	}
+
+	return rf, nil
 }
 
 func calcRoDryland(Ro1 float64, diffRo float64, aRo float64, lossFactor float64, perToRch float64) (runOff float64, roToRch float64) {
