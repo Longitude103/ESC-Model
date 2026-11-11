@@ -1,14 +1,14 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"testing"
 )
 
 func TestParcelPumpSS(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 1895
 	v.EYear = 1895
 	v.SteadyState = true

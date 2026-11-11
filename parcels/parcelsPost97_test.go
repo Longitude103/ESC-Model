@@ -1,7 +1,7 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -62,7 +62,7 @@ func Test_removeGWO(t *testing.T) {
 }
 
 func Test_post97Parcels(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	if err := v.SetYears(1997, 2020); err != nil {
 		t.Error("Error Setting years for setup")
 	}

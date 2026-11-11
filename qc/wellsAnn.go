@@ -1,7 +1,7 @@
 package qc
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"bufio"
 	_ "embed"
 	"fmt"

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 	"database/sql"
 	"fmt"
 	"github.com/spf13/cobra"

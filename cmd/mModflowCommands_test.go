@@ -1,12 +1,12 @@
 package cmd_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/cmd"
+	"github.com/Longitude103/ESC-Model/cmd"
 	"database/sql"
 	"testing"
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 )
 
 func TestExcludeResults(t *testing.T) {

@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/Longitude103/wwum2020.svg)](https://pkg.go.dev/github.com/Longitude103/wwum2020)
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
-[![Release](https://img.shields.io/github/v/release/Longitude103/wwum2020?display_name=tag)](https://bitbucket.org/longitude-103/wwumm-esc/releases)
+[![Release](https://img.shields.io/github/v/release/Longitude103/wwum2020?display_name=tag)](https://github.com/Longitude103/ESC-Model/releases)
 
 This CLI is the major starting point for the 2020 model operations. It's written in [![Go](https://img.shields.io/badge/--00ADD8?style=plastic&logo=go&logoColor=ffffff)](https://golang.org/)
 and the binaries are compiled with [![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/Longitude103/wwum2020)](https://github.com/Longitude103/wwum2020) and are available in the latest release.

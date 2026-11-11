@@ -1,7 +1,7 @@
 package database
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"database/sql"
 	_ "embed"
 	"errors"

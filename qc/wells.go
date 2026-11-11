@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"github.com/paulmach/orb/geojson"
 	"github.com/pterm/pterm"
 )

@@ -8,7 +8,7 @@ import (
 )
 
 func Test_GetSurfaceWaterDelivery(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 1997
 	v.EYear = 2020
 
@@ -25,7 +25,7 @@ func Test_GetSurfaceWaterDelivery(t *testing.T) {
 }
 
 func Test_GetSurfaceWaterDeliverySS(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 1895
 	v.EYear = 1905
 	v.SteadyState = true

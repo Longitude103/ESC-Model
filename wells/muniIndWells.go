@@ -3,8 +3,8 @@ package wells
 import (
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/pterm/pterm"
 )
 

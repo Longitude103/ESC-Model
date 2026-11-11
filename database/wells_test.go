@@ -12,8 +12,7 @@ func TestGetMIWells(t *testing.T) {
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *Setup

@@ -1,7 +1,7 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"testing"
 )
 
@@ -24,7 +24,7 @@ func Test_distributeUsage(t *testing.T) {
 }
 
 func Test_getUsage(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SetYears(1997, 2020)
 
 	usage := parcels.GetUsage(v)

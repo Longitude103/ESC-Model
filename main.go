@@ -20,7 +20,7 @@
 // files.
 package main
 
-import "bitbucket.org/longitude-103/wwumm-esc/cmd"
+import "github.com/Longitude103/ESC-Model/cmd"
 
 // main function is the entry for the application that sets up the CLI and sets the flags needed for the application. This
 // function also has an error checking to deal with flags not set correctly.

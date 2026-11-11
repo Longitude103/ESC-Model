@@ -1,4 +1,4 @@
-module bitbucket.org/longitude-103/wwumm-esc
+module github.com/Longitude103/ESC-Model
 
 go 1.24
 

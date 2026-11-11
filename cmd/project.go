@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/logging"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/logging"
 	"errors"
 	"fmt"
 	"log"

@@ -1,7 +1,7 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"database/sql"
 	"testing"
 )
@@ -92,8 +92,11 @@ var p4 = parcels.Parcel{ParcelNo: 1235, AppEff: 0.65,
 var testParcelSlice = []parcels.Parcel{p1, p2, p3, p4}
 
 func TestParcel_String(t *testing.T) {
-	if p1.String() != "Parcel No: 1234, NRD: np, Year: 2014" {
-		t.Error("string doesn't produce correct result")
+	p := parcels.Parcel{ParcelNo: 1234, Nrd: "np", Yr: 2014, Area: 40.0, SoilCode: 622, CoeffZone: 2, AppEff: 0.85,
+		IrrType: sql.NullString{String: "SPRINKLER", Valid: true}}
+	want := "Parcel No: 1234, NRD: np, Year: 2014, Area: 40.00, SWFac: , SWID: 0, IrrType: SPRINKLER, Soil: 622, Coeff: 2 AppEff: 0.85"
+	if got := p.String(); got != want {
+		t.Errorf("string doesn't produce correct result:\n got: %q\nwant: %q", got, want)
 	}
 }
 
@@ -132,13 +135,14 @@ func TestParcel_changeFallow(t *testing.T) {
 }
 
 func TestParcel_noCropCheck(t *testing.T) {
-	p3.Crop1.Int64 = 0
-	p3.Crop1Cov.Float64 = 0.0
+	p := p3 // copy so the shared fixture is not mutated for later tests
+	p.Crop1.Int64 = 0
+	p.Crop1Cov.Float64 = 0.0
 
-	p3.NoCropCheck()
+	p.NoCropCheck()
 
-	if p3.Crop1.Int64 != 8 || p3.Crop1Cov.Float64 != 1.0 {
-		t.Errorf("noCropCheck failed, crop should be 8 but got %d, crop coverage should be 1.0 but got %f", p3.Crop1.Int64, p3.Crop1Cov.Float64)
+	if p.Crop1.Int64 != 8 || p.Crop1Cov.Float64 != 1.0 {
+		t.Errorf("noCropCheck failed, crop should be 8 but got %d, crop coverage should be 1.0 but got %f", p.Crop1.Int64, p.Crop1Cov.Float64)
 	}
 }
 
@@ -157,7 +161,7 @@ func Test_isGWO(t *testing.T) {
 }
 
 func Test_SSParcels(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 1895
 	v.EYear = 1905
 	v.SteadyState = true

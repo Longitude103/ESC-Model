@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/rchFiles"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/rchFiles"
 	"github.com/pterm/pterm"
 )
 

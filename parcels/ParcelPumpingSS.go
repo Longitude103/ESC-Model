@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels/conveyLoss"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/parcels/conveyLoss"
 	"github.com/pterm/pterm"
 )
 
