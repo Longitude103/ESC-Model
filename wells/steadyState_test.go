@@ -8,7 +8,7 @@ import (
 func TestSSWells(t *testing.T) {
 	sR := &sqlResults{}
 
-	if err := SteadyStateWells(dbConnection(), sR); err != nil {
+	if err := SteadyStateWells(dbConnection(t), sR); err != nil {
 		t.Error("Error in function")
 	}
 

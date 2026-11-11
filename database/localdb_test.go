@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -21,16 +22,15 @@ func (l *fakelog) Infof(template string, args ...interface{}) {
 func TestGetSqlite(t *testing.T) {
 	l := &fakelog{}
 
-	_, err := GetSqlite(l, "./", "testfile")
+	dir := t.TempDir()
+	db, err := GetSqlite(l, dir, "testfile")
 	if err != nil {
 		t.Fatalf("Error Creating SQLite: %s", err)
 	}
+	defer db.Close()
 
-	if _, err := os.Stat("./OutputFiles/"); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "resultstestfile.sqlite")); os.IsNotExist(err) {
 		t.Error("Didn't create the SQLite Database")
 	}
-
-	// clean up and remove the test db
-	os.RemoveAll("./OutputFiles/")
 
 }

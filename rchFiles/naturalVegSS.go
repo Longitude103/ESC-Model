@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"github.com/pterm/pterm"
 )
 

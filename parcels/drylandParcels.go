@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
 	"github.com/pterm/pterm"
 )
 

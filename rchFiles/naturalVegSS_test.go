@@ -3,13 +3,13 @@ package rchFiles_test
 import (
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
-	"bitbucket.org/longitude-103/wwumm-esc/rchFiles"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
+	"github.com/Longitude103/ESC-Model/rchFiles"
 )
 
 func TestNaturalVegSS(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SteadyState = true
 	wStations, err := database.GetWeatherStations(v.PgDb)
 	if err != nil {

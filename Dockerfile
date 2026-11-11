@@ -1,25 +1,31 @@
 # syntax=docker/dockerfile:1
 
 ## BUILD
-FROM golang:1.24 AS build
+# go-sqlite3 needs CGO, so build on the full Debian-based Go image.
+FROM golang:1.26-trixie AS build
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -o bin/wwum2020-amd64-linux
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o bin/esc-model-amd64-linux
 
-## Deploy
-FROM clearlinux:latest
+## RUN
+# Same Debian release as the build image so the glibc versions match.
+FROM debian:trixie-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY --from=build /app/bin/wwum2020-amd64-linux ./wwum2020-amd64-linux
-COPY .env .
-#VOLUME /home/heath/Documents/code/wwum2020/bin ./bin
+COPY --from=build /app/bin/esc-model-amd64-linux ./esc-model
 
-#ENTRYPOINT ["./app", "bash"]
+# The database login is not baked into the image. Either run
+#   docker run -it <image> ./esc-model init -u <username> -p <password>
+# inside the container, or mount an existing .configjson to /app/.configjson.
+ENTRYPOINT ["./esc-model"]

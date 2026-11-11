@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/Utils"
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/logging"
-	"bitbucket.org/longitude-103/wwumm-esc/qc"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/logging"
+	"github.com/Longitude103/ESC-Model/qc"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"path/filepath"

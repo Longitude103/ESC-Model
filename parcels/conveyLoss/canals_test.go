@@ -2,19 +2,18 @@ package conveyLoss
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/joho/godotenv"
 )
 
-func dbConnection() *database.Setup {
+func dbConnection(t testing.TB) *database.Setup {
+	t.Helper()
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *database.Setup
@@ -31,7 +30,7 @@ func dbConnection() *database.Setup {
 }
 
 func Test_getCanals(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 2014
 	v.EYear = 2016
 
@@ -67,7 +66,7 @@ func Test_getCanals(t *testing.T) {
 }
 
 func Test_getCanalsSS(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.SYear = 1895
 	v.EYear = 1905
 	v.SteadyState = true
@@ -106,7 +105,7 @@ func Test_getCanalsSS(t *testing.T) {
 }
 
 func Test_getCanalCells(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 
 	cc, err := getCanalCells(v)
 	if err != nil {

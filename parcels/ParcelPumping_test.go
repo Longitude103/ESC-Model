@@ -1,14 +1,14 @@
 package parcels_test
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/parcels"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"github.com/Longitude103/ESC-Model/parcels"
+
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
 	"github.com/joho/godotenv"
 )
 
@@ -19,12 +19,12 @@ var u4 = parcels.Usage{Yr: 2014, Nrd: "np", CertNum: "3458", UseAF: 200.0}
 
 var testUsageSlice = []parcels.Usage{u1, u2, u3, u4}
 
-func dbConnection() *database.Setup {
+func dbConnection(t testing.TB) *database.Setup {
+	t.Helper()
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	var v *database.Setup
@@ -48,8 +48,7 @@ func Test_distUsage(t *testing.T) {
 	var myEnv map[string]string
 	myEnv, err := godotenv.Read("../.env")
 	if err != nil {
-		fmt.Println("Cannot load Env Variables:", err)
-		os.Exit(1)
+		t.Skipf("skipping database test: cannot load .env: %v", err)
 	}
 
 	v, err := database.NewSetup(myEnv, database.WithNoSQLite(), database.WithDebug())
@@ -73,7 +72,7 @@ func Test_distUsage(t *testing.T) {
 }
 
 func Test_ParcelPump(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	if err := v.SetYears(2010, 2010); err != nil {
 		t.Error("Error Setting Years")
 	}
@@ -111,7 +110,7 @@ func Test_ParcelPump(t *testing.T) {
 }
 
 func Test_ParcelPumpPost97(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	if err := v.SetYears(2017, 2017); err != nil {
 		t.Error("Error Setting Years")
 	}

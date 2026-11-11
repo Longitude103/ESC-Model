@@ -5,7 +5,7 @@ import (
 )
 
 func TestCanalRecharge(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	v.AppDebug = true
 
 	if err := v.SetYears(2011, 2011); err != nil {
@@ -26,7 +26,7 @@ func TestCanalRecharge(t *testing.T) {
 }
 
 func Test_getLossPercent(t *testing.T) {
-	v := dbConnection()
+	v := dbConnection(t)
 	if err := v.SetYears(2016, 2016); err != nil {
 		t.Error("Failed to set years")
 	}

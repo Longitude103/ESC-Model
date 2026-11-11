@@ -1,8 +1,8 @@
 package parcels
 
 import (
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/fileio"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/fileio"
 )
 
 // ParcelNIR is a method that adds the NIR, RO, and DP for each parcel from the CSResults and weather station data.

@@ -116,3 +116,9 @@ fabric.properties
 
 bin
 *.md
+# Never send database logins into the build context
+.env
+.configjson
+OutputFiles
+*.sqlite
+*.log

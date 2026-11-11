@@ -1,17 +1,47 @@
-# WWUMM 2020 CLI
+# ESC Model (WWUMM)
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/Longitude103/wwum2020.svg)](https://pkg.go.dev/github.com/Longitude103/wwum2020)
-[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
-[![Release](https://img.shields.io/github/v/release/Longitude103/wwum2020?display_name=tag)](https://bitbucket.org/longitude-103/wwumm-esc/releases)
+[![CI](https://github.com/Longitude103/ESC-Model/actions/workflows/ci.yml/badge.svg)](https://github.com/Longitude103/ESC-Model/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Longitude103/ESC-Model.svg)](https://pkg.go.dev/github.com/Longitude103/ESC-Model)
+[![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Longitude103/ESC-Model)](https://github.com/Longitude103/ESC-Model/blob/master/go.mod)
+[![Release](https://img.shields.io/github/v/release/Longitude103/ESC-Model?display_name=tag)](https://github.com/Longitude103/ESC-Model/releases)
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-This CLI is the major starting point for the 2020 model operations. It's written in [![Go](https://img.shields.io/badge/--00ADD8?style=plastic&logo=go&logoColor=ffffff)](https://golang.org/)
-and the binaries are compiled with [![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/Longitude103/wwum2020)](https://github.com/Longitude103/wwum2020) and are available in the latest release.
+The ESC Model is the command line tool for the Western Water Use Management Model (WWUMM). It reads parcel, well,
+canal and CropSim data, runs the soil water balance for each parcel, and writes the recharge and pumping inputs that the
+groundwater (MODFLOW 6) model uses to analyze the stream effects of pumping.
+
+It is written in [Go](https://go.dev/). Pre-built binaries for Windows, macOS and Linux are attached to each
+[release](https://github.com/Longitude103/ESC-Model/releases).
+
+## Quick start
+
+1. Download the binary for your system from the latest release.
+2. Save your database login (once per computer, see [Database](#database)):
+
+   ```
+   EscModel init -u <username> -p <password>
+   ```
+
+3. Run the model, pointing it at the folder of CropSim monthly output files:
+
+   ```
+   EscModel runModel --Desc "Test Run" --CSDir "<path>/CropSim/Output"
+   ```
+
+4. Turn the results into MODFLOW 6 files and answer the prompts:
+
+   ```
+   EscModel mfFiles
+   ```
+
+In these examples `EscModel` stands for the binary you downloaded, for example `wwumm-amd64-win_v1.6.15.exe` in
+PowerShell or `./wwumm-arm64-darwin_v1.6.15` in a macOS Terminal.
 
 ## Database
 
-The CLI uses the WWUM postgres database hosted on a [Linode (Akamai) managed PostgreSQL](https://www.linode.com/products/postgresql/)
-server. The postgresql database uses the [PostGIS](https://postgis.net/) extension to calculate the spatial
-components of the data. Connections require SSL.
+The model reads its source data from the WWUMM PostgreSQL database, hosted on a
+[Linode (Akamai) managed PostgreSQL](https://www.linode.com/products/postgresql/) server with the
+[PostGIS](https://postgis.net/) extension for the spatial work. Connections require SSL.
 
 Before running any other command, save your database login with `init`. Each office has its own login:
 
@@ -19,90 +49,103 @@ Before running any other command, save your database login with `init`. Each off
 EscModel init -u <username> -p <password>
 ```
 
-This writes a `.configjson` file next to the executable. The host, port, database name and SSL mode default to the WWUMM
-server; override them with `--host`, `--port`, `--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a
-local development database).
+This writes a `.configjson` file in the folder you run the command from. Keep that file private; it holds your password.
+The host, port, database name and SSL mode default to the WWUMM server. Override them with `--host`, `--port`,
+`--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a local development database).
 
-## CLI functions
+## Commands
 
-There are several CLI functions called with the CLI and this is a list of them. You can
-also get a list by running the program without anything. The "flag" package is used for the CLI which enables the use
-of flags in the CLI. This is a core go package.
+Run the binary with no arguments, or with `--help`, to see the full list. Add `--help` after any command to see its flags.
 
-- runModel => is the operation to start the main model run function, and it includes the following flags:
-  - Required Flags:
-    - --Desc: A description of the model being run
-    - --CSDir: The directory path to the CropSim Results text files
-  - Optional Flags
-    - --debug: run in debug mode with more log output and limited write operations
-    - --StartYr: start year of the distribution, defaults to: 1997
-    - --EndYr: end year of the distribution, defaults to: 2020
-    - --NoExcessFlow: Removes the excess flow recharge from the model
-    - --oldGrid: runs the model with the original 40-acre grid pattern from previous models
-    - --mf6Grid40: runs the model with the 40 acre grids using MODFLOW 6 node numbers
-    - --post97: sets the model to post 1997 mode where it holds 1997 acres and crop types constant, no excess flows
+| Command | What it does |
+| --- | --- |
+| `init` | Saves your database login to `.configjson`. |
+| `runModel` | Runs the model and writes a results database (see flags below). |
+| `runSteadyState` | Runs the steady state model, averaging CropSim results over a span of years. |
+| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use. |
+| `qcResults` | Summarizes a results database (annual recharge by type) and can write GeoJSON for GIS review. |
+| `project` | Projects pumping and recharge forward for the Robust Review analysis from an existing results database. |
+| `parcel-delete` | Deletes a parcel, and its junction table rows, from the land use data. |
+| `parcel-copy` | Copies a parcel from one year to another. |
+| `jct-delete` | Deletes a single parcel to well junction record. |
 
-- mfFiles => is the CLI function to use the results from the `runModel` function and results database to create
-  new MODFLOW files for MODFLOW 6 in the form of RCH6 and WEL6 files. It creates an "OutputFiles" directory in the
-  same location as the binary for the result files.
+### `runModel` flags
 
-- qcResults => is a CLI function to retrieve information from the results' database for information about the run. The initial
-  function asks questions about which results database to analyze and then produces an Annual Recharge Summary by recharge
-  type. In addition, it can also create a GeoJSON file for further analysis in the "OutputFiles" directory
+| Flag | Meaning |
+| --- | --- |
+| `-d, --Desc` | **Required.** Description of the run. |
+| `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files. |
+| `-s, --StartYr` | First year to run (default 1997). |
+| `-e, --EndYr` | Last year to run (default 2020). |
+| `-b, --debug` | More log output and limited writes. |
+| `-n, --noExcessFlow` | Leaves out excess flow recharge. |
+| `-o, --oldGrid` | Uses the original 40 acre grid instead of the USG grid. |
+| `-m, --mf6Grid40` | Uses the 40 acre grid with MODFLOW 6 node numbers. |
+| `-p, --post97` | Post 1997 run: holds 1997 acres and crop types constant, no excess flows. |
+| `-r, --noRetirements` | Puts retired parcels back using net pumping. |
+| `-a, --AllocAnalysis` | Allocation analysis mode. |
+| `-t, --TotalDep` | Total depletion mode. |
+| `-z, --P97Dep` | Post 1997 depletion analysis mode. |
 
-- project => is a CLI function to project pumping and recharge forward to operate the robust review analysis. This function
-  enables the user to select a list of years to project and how many years into the future and the pattern to repeat those years.
-  The command requires a already existing results database to use and the ability to connect to the internet for it's analysis.
+### `runSteadyState` flags
 
-- parcel-delete => is a CLI function to delete a parcel from the land use dataset within the source data application. This
-  function also deletes the corresponding value in the junction table to ensure the database constraints are properly executed.
+`--Desc` and `--CSDir` are required, as above. `--StartYr` and `--EndYr` set the steady state period (defaults 1893 to
+1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results (defaults 1953 to 2020).
+`--oldGrid` and `--mf6Grid40` work as in `runModel`.
 
-- runSteadyState => is a CLI function to run the steady state model execution for the EscModel. This function will run the model
-  using the provided configuration for steady state. It will create a new output database file on your local filesystem in the
-  same directory as the executable.
+### `project` flags
 
-### Common CLI Examples
+`--Years` is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`), `--ProjectYears` is
+how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output.
 
-- Production runModel:
-  - Windows -> In Powershell: `wwum2020-amd64-windows.exe runModel --Desc "Test Run" --CSDir "<path>\WWUMM2020\CropSim\Run005_WWUM2020\Output"`
-  - MacOS (Intel Mac)-> In a Terminal: `./wwum2020-amd64-darwin runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
-  - MacOS (Apple Silicon)-> In a Terminal: `./wwum2020-arm64-darwin runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
-  - Linux -> In a Terminal: `./wwum2020-amd64-linux runModel --Desc "Test Run" --CSDir "<path>/WWUMM2020/CropSim/Run005_WWUM2020/Output"`
+## Output
 
-- Production mfFiles
-  - Windows -> In Powershell: `wwum2020-amd64-windows.exe mfFiles` -> Follow Prompts
-  - MacOS (Intel Mac) -> In a Terminal: `./wwum2020-amd64-darwin mfFiles` -> Follow Prompts
-  - MacOS (Apple Silicon)-> In a Terminal: `./wwum2020-arm64-darwin mfFiles` -> Follow Prompts
-  - Linux -> In a Terminal: `./wwum2020-amd64-linux mfFIles` -> Follow Prompts
+Everything is written under an `OutputFiles` folder in the folder you run the binary from, with one time-stamped
+sub-folder per run.
 
-#### Development runs
+- `runModel` and `runSteadyState` write a SQLite results database (`.sqlite`) and a `.log` file with run details and
+  any errors into an `OutputFiles/results<timestamp>` folder.
+- `mfFiles`, `qcResults` and `project` read a results database and write their RCH, WEL, summary and GeoJSON files
+  into their own time-stamped sub-folder.
+- The GeoJSON from `qcResults` opens in [QGIS](https://qgis.org) and should also work in ESRI products.
 
-These runs have been replaced locally by running in ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=plastic&logo=docker&logoColor=white). The Docker notes are found in the "development.md" file in this source
-directory and give guidance on compiling and running locally.
+## Building from source
 
-### Output
+You need Go 1.26 or newer and a C compiler, because the SQLite driver uses CGO.
 
-To store the large volume of output from `runModel`, the CLI uses a SQLite3 file as the storage container and is named
-`results<timestamp>.sqlite` that will be in the same dir as the executable. This gives the ability to still be SQL enabled, but also allow compressing and store the data in Binary Format.
-The text file output from the `runModel` is `results<timestamp>.log` file. This file includes run details and
-any additional information about errors that might occur while operating. The `mfFiles` function creates two text files that
-are the rch and wel files. The wel6 and rch6 files are stored
-in an `OutputFiles` directory created in the same location as the executable file and then in sub-folders that correspond with
-the results database and are named the same.
+```
+git clone https://github.com/Longitude103/ESC-Model.git
+cd ESC-Model
+go build -o bin/esc-model .
+```
 
-### ModFlow Output Files
+On Windows, install a GCC such as [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) first; see
+[windows_compile.md](windows_compile.md). The `Makefile` has `build` (macOS and Linux) and `build-win` targets for
+release binaries.
 
-The second command that is used by the app is the `mfFiles` command that enables you to write out ModFlow 6 files needed for the
-further model runs.
+### Tests
 
-- Create the MODFLOW 6 files by using `./wwum2020-amd64-windows.exe mfFiles` (Windows Example)
+```
+go test ./...
+```
 
-### QC Results
+Most tests are unit tests and run anywhere. Tests that read from the PostgreSQL database need a `.env` file at the
+repository root with `user`, `password`, `host`, `port` and `dbname` entries (and optionally `sslmode`, which defaults
+to `require`); without it they are skipped. Never commit
+`.env` or `.configjson`: this repository is public.
 
-This function is intended to analyze the results database and produce some totaling and output files that can make it easier
-to spot problems and issues with the runs. This creates a recharge table section that outputs the selected annual amount of
-recharge by type. In addition, there is an optional recharge output that will allow you to create a GeoJSON file that can be used
-by that can be added to GIS desktop software or online mapping software for spatial analysis of the results by model grid.
-We've tested this on [QGIS,](https://qgis.org) and it should also work on ESRI products.
+GitHub Actions runs `gofmt`, `go vet`, the tests and a build on every pull request.
 
-- Create the QC Results by using `./wwum2020-amd64-windows.exe qcResults` (Windows Example)
+### Docker
+
+The [Dockerfile](Dockerfile) builds a Linux image. See [development.md](development.md) for running it with your
+CropSim and output folders mounted.
+
+## Model notes
+
+Notes on how specific processes are handled (fallow, pumping outside the NRDs, unit conversions to MODFLOW) are in
+[notes.md](notes.md).
+
+## License
+
+GPLv3. See [LICENSE](LICENSE).

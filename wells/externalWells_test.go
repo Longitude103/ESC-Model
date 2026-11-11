@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 )
 
 func TestCreateExternalWells(t *testing.T) {
 	sR := &sqlResults{}
 
-	dbconn := dbConnection()
+	dbconn := dbConnection(t)
 	dbconn.SetYears(1968, 1968)
 	dbconn.OldGrid = true
 	dbconn.AppDebug = false

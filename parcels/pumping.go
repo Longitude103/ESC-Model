@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
+	"github.com/Longitude103/ESC-Model/database"
 )
 
 // EstimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate

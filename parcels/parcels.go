@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/longitude-103/wwumm-esc/database"
-	"bitbucket.org/longitude-103/wwumm-esc/parcels/conveyLoss"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels/conveyLoss"
 )
 
 type Parcel struct {
