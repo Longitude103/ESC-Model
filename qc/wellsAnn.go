@@ -1,10 +1,10 @@
 package qc
 
 import (
-	"github.com/Longitude103/ESC-Model/Utils"
 	"bufio"
 	_ "embed"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"os"
 	"path/filepath"
 

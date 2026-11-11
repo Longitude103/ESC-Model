@@ -1,11 +1,11 @@
 package database
 
 import (
-	"github.com/Longitude103/ESC-Model/Utils"
 	"database/sql"
 	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"strconv"
 	"strings"
 	"time"

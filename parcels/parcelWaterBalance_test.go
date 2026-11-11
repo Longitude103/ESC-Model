@@ -1,10 +1,10 @@
 package parcels_test
 
 import (
-	"github.com/Longitude103/ESC-Model/Utils"
-	"github.com/Longitude103/ESC-Model/parcels"
 	"database/sql"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/Utils"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"strings"
 	"testing"
 )

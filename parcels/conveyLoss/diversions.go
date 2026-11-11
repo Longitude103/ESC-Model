@@ -1,10 +1,10 @@
 package conveyLoss
 
 import (
-	"github.com/Longitude103/ESC-Model/Utils"
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/Utils"
 	"strconv"
 	"strings"
 	"time"

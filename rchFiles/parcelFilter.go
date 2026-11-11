@@ -1,8 +1,8 @@
 package rchFiles
 
 import (
-	"github.com/Longitude103/ESC-Model/parcels"
 	"errors"
+	"github.com/Longitude103/ESC-Model/parcels"
 )
 
 // parcelFilterByYear is a function to filter our a parcels by a year and return a slice of those that are all of that year

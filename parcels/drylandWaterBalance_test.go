@@ -1,9 +1,9 @@
 package parcels
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
 	"database/sql"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/database"
 	"testing"
 )
 

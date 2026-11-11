@@ -1,8 +1,8 @@
 package parcels
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/database"
 )
 
 func getSSParcels(v *database.Setup, yr int) []Parcel {

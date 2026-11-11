@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/Longitude103/ESC-Model/parcels"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"github.com/spf13/cobra"
 	"os"
 	"time"

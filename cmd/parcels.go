@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
 	"database/sql"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/database"
 	"github.com/spf13/cobra"
 	"log"
 )

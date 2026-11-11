@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/Longitude103/ESC-Model/Utils"
 	"github.com/Longitude103/ESC-Model/database"
 	"github.com/Longitude103/ESC-Model/logging"
 	"github.com/Longitude103/ESC-Model/qc"
-	"fmt"
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"path/filepath"

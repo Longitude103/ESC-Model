@@ -1,10 +1,10 @@
 package rchFiles
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
-	"github.com/Longitude103/ESC-Model/parcels"
 	"database/sql/driver"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"github.com/jmoiron/sqlx"
 	"testing"
 	"time"

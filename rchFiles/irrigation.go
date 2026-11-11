@@ -1,10 +1,10 @@
 package rchFiles
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
-	"github.com/Longitude103/ESC-Model/parcels"
 	"errors"
 	"fmt"
+	"github.com/Longitude103/ESC-Model/database"
+	"github.com/Longitude103/ESC-Model/parcels"
 	"github.com/pterm/pterm"
 	"time"
 )

@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Longitude103/ESC-Model/Utils"
 	"github.com/Longitude103/ESC-Model/database"
 	"github.com/Longitude103/ESC-Model/logging"
-	"errors"
-	"fmt"
 	"log"
 	"path/filepath"
 	"strconv"

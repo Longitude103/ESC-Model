@@ -1,8 +1,8 @@
 package cmd_test
 
 import (
-	"github.com/Longitude103/ESC-Model/cmd"
 	"database/sql"
+	"github.com/Longitude103/ESC-Model/cmd"
 	"testing"
 	"time"
 

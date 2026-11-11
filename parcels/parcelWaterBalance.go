@@ -1,8 +1,8 @@
 package parcels
 
 import (
-	"github.com/Longitude103/ESC-Model/database"
 	"errors"
+	"github.com/Longitude103/ESC-Model/database"
 	"math"
 )
 

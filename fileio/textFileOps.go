@@ -1,8 +1,8 @@
 package fileio
 
 import (
-	"github.com/Longitude103/ESC-Model/logging"
 	"bufio"
+	"github.com/Longitude103/ESC-Model/logging"
 	"os"
 	"path/filepath"
 	"strconv"
