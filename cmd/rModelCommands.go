@@ -172,7 +172,7 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 	}
 
 	if eF {
-		if err := noteDb.Add(database.Note{Nt: "Includes Excess Flow Diversions"}); err != nil {
+		if err := noteDb.Add(database.Note{Nt: "Excludes Excess Flow Diversions"}); err != nil {
 			return err
 		}
 	}
@@ -216,6 +216,7 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 	irrParcels, err := parcels.ParcelPump(v, csResults, wStations)
 	if err != nil {
 		v.Logger.Errorf("Error in Parcel Pumping: %s", err)
+		return err
 	}
 	pterm.Success.Println("Successfully Completed Parcel Pumping")
 
@@ -277,7 +278,10 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 		}
 	}
 
-	resultsDB, _ := database.ResultsWelDB(v.SlDb)
+	resultsDB, err := database.ResultsWelDB(v.SlDb)
+	if err != nil {
+		return err
+	}
 	// run steady State Wells
 	if err := wells.SteadyStateWells(v, resultsDB); err != nil {
 		return err
@@ -300,6 +304,12 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 		return err
 	}
 	pterm.Success.Println("Successfully Completed MI Well Ops")
+
+	// write out anything still sitting in the WEL buffer (SS, external and MI wells), otherwise the last partial
+	// batch of up to 1023 records is never saved.
+	if err := resultsDB.Close(); err != nil {
+		return err
+	}
 
 	_ = noteDb.Close()
 	_ = v.SlDb.Close() // close the db before ending the program

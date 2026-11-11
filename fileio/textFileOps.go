@@ -2,6 +2,7 @@ package fileio
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/Longitude103/ESC-Model/logging"
 	"os"
 	"path/filepath"
@@ -33,7 +34,6 @@ type MonthlyValues struct {
 // also stored in the StationResults struct as Station
 func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]StationResults, error) {
 	logger.Infof("File Path: %s", filePath)
-	//fmt.Println("File Path:", filePath)
 	fls, err := os.ReadDir(filePath)
 	// TODO: Ensure that there are Weather files here, otherwise throw an error
 	if err != nil {
@@ -44,13 +44,21 @@ func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]Sta
 	dataMap := make(map[string][]StationResults)
 	for _, v := range fls {
 		wStationId := v.Name()
+		// skip folders, hidden files (.DS_Store etc.) and anything too short to hold a station id
+		if v.IsDir() || strings.HasPrefix(wStationId, ".") || len(wStationId) < 4 {
+			logger.Infof("Skipping non-station entry: %s", wStationId)
+			continue
+		}
+
 		logger.Infof("Reading station: %s", wStationId[:4])
 		path := filepath.Join(filePath, v.Name())
-		dataMap[wStationId[:4]], err = getFileData(path, logger)
-	}
-	if err != nil {
-		logger.Errorf("Error in processing data, %s", err)
-		return nil, err
+		data, err := getFileData(path, logger)
+		if err != nil {
+			logger.Errorf("Error in processing data for %s, %s", wStationId, err)
+			return nil, err
+		}
+
+		dataMap[wStationId[:4]] = data
 	}
 
 	return dataMap, nil
@@ -60,40 +68,51 @@ func LoadTextFiles(filePath string, logger *logging.TheLogger) (map[string][]Sta
 func getFileData(filePath string, logger *logging.TheLogger) ([]StationResults, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		logger.Errorf("Error in getting %s file data, err: %s", file.Name(), err)
+		logger.Errorf("Error in getting %s file data, err: %s", filePath, err)
+		return nil, err
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
-	//fmt.Println("Line 1:", scanner.Text())
-	//fmt.Println("Line 1 Split", strings.Fields(scanner.Text()))
-	//fmt.Println("Line 1 length", len(strings.Fields(scanner.Text()))) // 78
 
 	var stationData []StationResults
+	lineNo := 1
 	for scanner.Scan() {
+		lineNo++
 		elements := strings.Fields(scanner.Text())
+		if len(elements) == 0 {
+			continue
+		}
+
+		if len(elements) < 78 {
+			return nil, fmt.Errorf("%s line %d: expected 78 fields, found %d", filePath, lineNo, len(elements))
+		}
+
 		station := StationResults{Station: elements[0]}
-		station.Yr, err = strconv.Atoi(elements[1])
-		station.Soil, err = strconv.Atoi(elements[2])
-		station.Crop, err = strconv.Atoi(elements[3])
-		station.Tillage, err = strconv.Atoi(elements[4])
-		station.Irrigation, err = strconv.Atoi(elements[5])
+		ints := []*int{&station.Yr, &station.Soil, &station.Crop, &station.Tillage, &station.Irrigation}
+		for i, ptr := range ints {
+			if *ptr, err = strconv.Atoi(elements[i+1]); err != nil {
+				return nil, fmt.Errorf("%s line %d: %w", filePath, lineNo, err)
+			}
+		}
 
 		for i := 6; i < 78; i = i + 6 {
-			var mvals MonthlyValues
-			mvals.Et, err = strconv.ParseFloat(elements[i], 64)
-			mvals.Eff_precip, err = strconv.ParseFloat(elements[i+1], 64)
-			mvals.Nir, err = strconv.ParseFloat(elements[i+2], 64)
-			mvals.Dp, err = strconv.ParseFloat(elements[i+3], 64)
-			mvals.Ro, err = strconv.ParseFloat(elements[i+4], 64)
-			mvals.Precip, err = strconv.ParseFloat(elements[i+5], 64)
+			var vals [6]float64
+			for j := 0; j < 6; j++ {
+				if vals[j], err = strconv.ParseFloat(elements[i+j], 64); err != nil {
+					return nil, fmt.Errorf("%s line %d: %w", filePath, lineNo, err)
+				}
+			}
 
-			station.MonthlyData = append(station.MonthlyData, mvals)
+			station.MonthlyData = append(station.MonthlyData, MonthlyValues{Et: vals[0], Eff_precip: vals[1],
+				Nir: vals[2], Dp: vals[3], Ro: vals[4], Precip: vals[5]})
 		}
 
 		stationData = append(stationData, station)
 	}
-	if err != nil {
+
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 

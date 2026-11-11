@@ -244,7 +244,7 @@ GROUP BY i.parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c
 		parcels[i].Yr = Year
 	}
 
-	if v.AppDebug {
+	if v.AppDebug && len(parcels) > 20 {
 		return parcels[:20]
 	}
 

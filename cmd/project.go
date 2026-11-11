@@ -29,8 +29,9 @@ var projectOutput = &cobra.Command{
 		}
 
 		projYears, _ := cmd.Flags().GetInt("ProjectYears")
-		if projYears == 0 {
+		if projYears <= 0 {
 			pterm.Error.Println("Projection Years must be greater than 0")
+			return
 		}
 
 		fileName, _ := cmd.Flags().GetString("FileNames")
@@ -70,13 +71,14 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 		return err
 	}
 
-	path, fileName, err := Utils.MakeOutputDir("qc")
+	path, timeStamp, err := Utils.MakeOutputDir("qc")
 	if err != nil {
 		return err
 	}
 
 	v := database.Setup{}
-	logFileName := fmt.Sprintf("qcFiles%s.log", fileName)
+	// --FileNames sets the prefix of the log file (it used to be overwritten and ignored)
+	logFileName := fmt.Sprintf("%s%s.log", fileName, timeStamp)
 	filePath := filepath.Join(path, logFileName)
 
 	v.PgDb, err = database.PgConnx(myEnv)
@@ -184,7 +186,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
 		return err
 	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears)}); err != nil {
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears-1)}); err != nil {
 		return err
 	}
 	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {

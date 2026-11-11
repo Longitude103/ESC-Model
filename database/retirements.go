@@ -183,6 +183,10 @@ func GetRetirements(v *Setup, rYears []int) (allRetirements map[int]Retirements,
 
 func GetOneYearRetirements(v *Setup, year int) (Retirements, error) {
 	allRetirementWells, err := GetRetirementWells(v)
+	if err != nil {
+		return Retirements{}, err
+	}
+
 	singleYrRetirements, err := GetSingleYearRetirements(v, year)
 	if err != nil {
 		if err.Error() == "year must be 1998 through 2020" {

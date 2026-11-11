@@ -40,7 +40,7 @@ func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
 		return nil, err
 	}
 
-	if v.AppDebug {
+	if v.AppDebug && len(irrCells) > 100 {
 		return irrCells[:100], nil
 	}
 

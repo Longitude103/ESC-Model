@@ -218,7 +218,7 @@ var parcelCopyCmd = &cobra.Command{
 		}
 
 		// Copy junction table data
-		query = fmt.Sprintf(`select * from %s.t%d_jct where parcel_id = %d;`, nrd, yrTo, parcel.ParcelNo)
+		query = fmt.Sprintf(`select parcel_id, wellid from %s.t%d_jct where parcel_id = %d;`, nrd, yrFrom, parcel.ParcelNo)
 
 		var jcts []Jct
 		if err := v.PgDb.Select(&jcts, query); err != nil {

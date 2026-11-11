@@ -31,6 +31,11 @@ func CreateExternalRecharge(v *database.Setup) error {
 		}
 	}
 
+	// save the last partial batch, otherwise up to 1023 records are dropped
+	if err := rchDB.Close(); err != nil {
+		return err
+	}
+
 	spin.Success()
 	v.Logger.Info("External Recharge function completed.")
 	return nil

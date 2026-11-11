@@ -89,21 +89,29 @@ func (p *Parcel) shouldEstimate(v *database.Setup) (bool, error) {
 func AdjustmentFactor(p *Parcel, cCrops []database.CoeffCrop, adj database.Adjustment) (float64, error) {
 	var (
 		c2, c3, c4 float64
+		err        error
 	)
 	c1, err := AdjFactor(cCrops, p.CoeffZone, int(p.Crop1.Int64), adj)
+	if err != nil {
+		return 0, err
+	}
 
 	if p.Crop2.Valid {
-		c2, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj)
+		if c2, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop2.Int64), adj); err != nil {
+			return 0, err
+		}
 	}
+
 	if p.Crop3.Valid {
-		c3, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj)
+		if c3, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop3.Int64), adj); err != nil {
+			return 0, err
+		}
 	}
 
 	if p.Crop4.Valid {
-		c4, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj)
-	}
-	if err != nil {
-		return 0, err
+		if c4, err = AdjFactor(cCrops, p.CoeffZone, int(p.Crop4.Int64), adj); err != nil {
+			return 0, err
+		}
 	}
 
 	return c1*p.Crop1Cov.Float64 + c2*p.Crop2Cov.Float64 + c3*p.Crop3Cov.Float64 + c4*p.Crop4Cov.Float64, nil
