@@ -52,6 +52,7 @@ EscModel init -u <username> -p <password>
 This writes a `.configjson` file in the folder you run the command from. Keep that file private; it holds your password.
 The host, port, database name and SSL mode default to the WWUMM server. Override them with `--host`, `--port`,
 `--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a local development database).
+If the database server moves, run `init` again with the new `--host`; you don't need to change or rebuild the code.
 
 ## Commands
 
@@ -62,7 +63,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `init` | Saves your database login to `.configjson`. |
 | `runModel` | Runs the model and writes a results database (see flags below). |
 | `runSteadyState` | Runs the steady state model, averaging CropSim results over a span of years. |
-| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use. |
+| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use, a suffix for the file names (for example `task3_npnrd`, giving `AggregateWEL_task3_npnrd.WEL6`) and the description for the file headers. Each WEL file's flow-reduction CSV is named after that file (`<file>_reduction.csv`). |
 | `qcResults` | Summarizes a results database (annual recharge by type) and can write GeoJSON for GIS review. |
 | `project` | Projects pumping and recharge forward for the Robust Review analysis from an existing results database. |
 | `parcel-delete` | Deletes a parcel, and its junction table rows, from the land use data. |
@@ -121,7 +122,13 @@ go build -o bin/esc-model .
 
 On Windows, install a GCC such as [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) first; see
 [windows_compile.md](windows_compile.md). The `Makefile` has `build` (macOS and Linux) and `build-win` targets for
-release binaries.
+local builds.
+
+### Releases
+
+Push a version tag (for example `git tag v1.7.0 && git push origin v1.7.0`). The Release workflow builds the Windows,
+macOS (Intel and Apple silicon) and Linux binaries on GitHub and attaches them to a new release, so nobody has to build
+on their own machine.
 
 ### Tests
 

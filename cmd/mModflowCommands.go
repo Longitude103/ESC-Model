@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -67,6 +66,11 @@ func makeModflowFiles() error {
 		return err
 	}
 
+	suffix, mDesc, err := outputQuestions(mDesc)
+	if err != nil {
+		return err
+	}
+
 	var aggWel, aggRch []database.MfResults
 
 	if steadyState {
@@ -77,7 +81,7 @@ func makeModflowFiles() error {
 			return err
 		}
 
-		if err := processSSAggRCH(aggRch, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
+		if err := processSSAggRCH(aggRch, outputName("AggregateRCH", suffix), path, mDesc, startDate, endDate); err != nil {
 			return err
 		}
 
@@ -92,7 +96,7 @@ func makeModflowFiles() error {
 				return err
 			}
 
-			if err := MakeFiles(aggWel, true, false, a.RowCol, "AggregateWEL", path, mDesc, startDate, endDate); err != nil {
+			if err := MakeFiles(aggWel, true, false, a.RowCol, outputName("AggregateWEL", suffix), path, mDesc, startDate, endDate); err != nil {
 				return err
 			}
 		}
@@ -116,8 +120,7 @@ func makeModflowFiles() error {
 
 		for k := range singleWELResults {
 			if len(singleWELResults[k]) > 0 {
-				noSpaces := strings.Replace(k, " ", "_", -1)
-				fn := fmt.Sprintf("%sWEL", noSpaces)
+				fn := outputName(fmt.Sprintf("%sWEL", k), suffix)
 				if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
 					return err
 				}
@@ -126,8 +129,7 @@ func makeModflowFiles() error {
 
 		for k := range singleRCHResults {
 			if len(singleRCHResults[k]) > 0 {
-				noSpaces := strings.Replace(k, " ", "_", -1)
-				fn := fmt.Sprintf("%sRCH", noSpaces)
+				fn := outputName(fmt.Sprintf("%sRCH", k), suffix)
 				if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
 					return err
 				}
@@ -140,7 +142,7 @@ func makeModflowFiles() error {
 				return err
 			}
 
-			if err := MakeFiles(aggRch, false, true, a.RowCol, "AggregateRCH", path, mDesc, startDate, endDate); err != nil {
+			if err := MakeFiles(aggRch, false, true, a.RowCol, outputName("AggregateRCH", suffix), path, mDesc, startDate, endDate); err != nil {
 				return err
 			}
 		}
@@ -287,6 +289,14 @@ func MakeFiles(r []database.MfResults, wel bool, rch bool, Rc bool, fileName str
 
 	if err := Flogo.Input(wel, rch, Rc, fileName, rInterface, outputPath, mDesc, modelStartDate, modelEndDate); err != nil {
 		return err
+	}
+
+	if wel {
+		// flogo names the AUTO_FLOW_REDUCE_CSV output after the run description, which is the same for every WEL
+		// file in a run. Name it after the WEL file instead so MODFLOW doesn't try to open one CSV for several files.
+		if err := setReduceCSVName(filepath.Join(outputPath, fileName+".WEL6"), fileName+"_reduction.csv"); err != nil {
+			return err
+		}
 	}
 
 	return nil
