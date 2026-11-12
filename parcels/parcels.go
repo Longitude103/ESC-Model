@@ -184,17 +184,16 @@ func FilterParcelByCert(p *[]Parcel, c string, filterGWO, filterP97GWO bool) (fP
 }
 
 // parcelSWDelivery method uses the diversions to then calculate the total amount of surface water delivered to a parcel
-// from those diversions. It returns nothing, but sets SWDel inside the Parcel
+// from those diversions. It returns nothing, but sets SWDel inside the Parcel. A parcel is split into one row per soil
+// and coefficient zone, and NIR, RO and DP are computed on that row's SoilArea, so delivery (acre-feet per acre) is
+// applied to SoilArea as well; using the whole parcel Area counted the delivery once per soil row.
 func (p *Parcel) parcelSWDelivery(diversions []conveyLoss.Diversion) {
 	canalDivs := conveyLoss.FilterDivs(diversions, int(p.SwID.Int64))
 
 	var swDelivery [12]float64
-	for m := 0; m < 12; m++ {
-		for _, d := range canalDivs {
-			if int(d.DivDate.Time.Month()) == m+1 {
-				swDelivery[m] = d.DivAmount.Float64 * p.Area
-			}
-		}
+	for _, d := range canalDivs {
+		m := int(d.DivDate.Time.Month()) - 1
+		swDelivery[m] += d.DivAmount.Float64 * p.SoilArea
 	}
 
 	p.SWDel = swDelivery

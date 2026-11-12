@@ -28,8 +28,15 @@ func (tm TimeExt) DaysInMonth() int {
 	return d
 }
 
+// DaysInYear returns the number of days in the year. It uses Y when set, otherwise the year of T (callers that only
+// set T used to get year 0, a leap year, so always 366).
 func (tm TimeExt) DaysInYear() int {
-	t := TimeExt{T: time.Date(tm.Y, 1, 1, 0, 0, 0, 0, time.UTC)}
+	y := tm.Y
+	if y == 0 {
+		y = tm.T.Year()
+	}
+
+	t := TimeExt{T: time.Date(y, 1, 1, 0, 0, 0, 0, time.UTC)}
 	ey := t.EndOfYear()
 	return ey.YearDay()
 }

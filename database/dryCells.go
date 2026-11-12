@@ -15,6 +15,8 @@ type DryCell struct {
 	DryArea  float64         `db:"d_area"`
 	PId      int64           `db:"parcel_id"`
 	Nrd      string          `db:"nrd"`
+	Soil     int             `db:"soil_code"`
+	CZone    int             `db:"coeff_zone"`
 }
 
 // GetDryCells is a function that returns a struct of cells with parcels that are within it including the crops and acres
@@ -24,7 +26,7 @@ func GetDryCells(v *Setup, yr int) []DryCell {
 		return GetDrySSCells(v)
 	}
 
-	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, d.geom))/43560 d_area, parcel_id, nrd
+	query := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, d.geom))/43560 d_area, parcel_id, nrd
         from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_dry UNION select parcel_id, 'sp' nrd, 
 		geom from sp.t%d_dry) d on st_intersects(c.geom, d.geom) where cell_type = %d;`, yr, yr, v.CellType())
 
@@ -46,7 +48,7 @@ func (d DryCell) GetLossFactor() float64 {
 }
 
 func GetDrySSCells(v *Setup) []DryCell {
-	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, d.geom))/43560 d_area, parcel_id, nrd
+	query := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, d.geom))/43560 d_area, parcel_id, nrd
         from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t1953_dry UNION select parcel_id, 'sp' nrd, 
 		geom from sp.t1953_dry) d on st_intersects(c.geom, d.geom) where cell_type = %d;`, v.CellType())
 

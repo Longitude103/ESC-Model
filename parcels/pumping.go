@@ -8,9 +8,17 @@ import (
 )
 
 // EstimatePumping is a method that is called on parcels that shouldEstimate == true so that we can estimate
-// the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct
+// the amount of pumping that was done at the parcel since a well is present, but not metered. It fills the Pump field of the Parcel struct.
+//
+// Pumping is gross water applied, the same as a meter reading: the NIR left after the consumptive use of any surface
+// water, divided by the application efficiency. WSPP then works out how much of it becomes ET and routes the rest to
+// runoff and deep percolation. (It used to be the net NIR, which left unmetered parcels deficit irrigated in WSPP.)
 func (p *Parcel) EstimatePumping(v *database.Setup) error {
 	if se, err := p.shouldEstimate(v); err != nil || se {
+		if p.AppEff <= 0 {
+			return fmt.Errorf("parcel %d (%s, %d) has no application efficiency, cannot estimate pumping", p.ParcelNo, p.Nrd, p.Yr)
+		}
+
 		var swAvailableCU, nirRemaining [12]float64
 		if p.IsSW() {
 			for i := 0; i < 12; i++ {
@@ -21,7 +29,7 @@ func (p *Parcel) EstimatePumping(v *database.Setup) error {
 		for m := 0; m < 12; m++ {
 			nirRemaining[m] = p.Nir[m] - swAvailableCU[m]
 			if nirRemaining[m] > 0 {
-				p.Pump[m] = nirRemaining[m]
+				p.Pump[m] = nirRemaining[m] / p.AppEff
 			}
 		}
 

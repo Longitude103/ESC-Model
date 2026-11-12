@@ -2,6 +2,7 @@ package conveyLoss
 
 import (
 	"github.com/Longitude103/ESC-Model/database"
+	"math"
 	"time"
 )
 
@@ -83,17 +84,19 @@ func getGeringDivs(diversions Diversions) map[int]Diversions {
 	return geringDiv
 }
 
+// fixMitchell returns the Mitchell canal delivery (acre-feet per acre) after 1984, when part of the Mitchell diversion
+// is carried on to the Gering canal: (Mitchell diversion x efficiency - Gering diversion), converted from day-cfs to
+// acre-feet and divided by the Mitchell acres. A month with no Gering record has nothing to remove, and the result is
+// never negative.
 func fixMitchell(diversion Diversion, geringDivs map[int]Diversions, eff float64, acres float64) float64 {
-	divs := geringDivs[diversion.DivDate.Time.Year()]
-	adjDiv := 0.0
-
-	for _, div := range divs {
+	geringDiv := 0.0
+	for _, div := range geringDivs[diversion.DivDate.Time.Year()] {
 		if diversion.DivDate.Time.Equal(div.DivDate.Time) {
-			adjDiv = (diversion.DivAmount.Float64*eff - div.DivAmount.Float64) / acres
+			geringDiv += div.DivAmount.Float64
 		}
 	}
 
-	return adjDiv
+	return math.Max(diversion.DivAmount.Float64*eff-geringDiv, 0) * 1.9835 / acres
 }
 
 // filterCnl filters the list of canals to a specific one.
