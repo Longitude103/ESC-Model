@@ -19,7 +19,7 @@ It is written in [Go](https://go.dev/). Pre-built binaries for Windows, macOS an
 2. Save your database login (once per computer, see [Database](#database)):
 
    ```
-   EscModel init -u <username> -p <password>
+   EscModel init -u <username> -p <password> --endYear 2024
    ```
 
 3. Run the model, pointing it at the folder of CropSim monthly output files:
@@ -54,6 +54,11 @@ The host, port, database name and SSL mode default to the WWUMM server. Override
 `--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a local development database).
 If the database server moves, run `init` again with the new `--host`; you don't need to change or rebuild the code.
 
+`--endYear` saves the last year with model data. `runModel` uses it as its default end year and `runSteadyState` as the
+default end of its averaging period, so extending the model only needs `init --endYear <year>`, not a code change. A
+config file without it falls back to 2020 and prints a reminder. External (outside-NRD) recharge and pumping use their
+data through the last year in the `ext_recharge` and `ext_pumping` tables and repeat that year after it.
+
 ## Commands
 
 Run the binary with no arguments, or with `--help`, to see the full list. Add `--help` after any command to see its flags.
@@ -77,7 +82,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `-d, --Desc` | **Required.** Description of the run. |
 | `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files. |
 | `-s, --StartYr` | First year to run (default 1997). |
-| `-e, --EndYr` | Last year to run (default 2020). |
+| `-e, --EndYr` | Last year to run (default: `endYear` from the config). |
 | `-b, --debug` | More log output and limited writes. |
 | `-n, --noExcessFlow` | Leaves out excess flow recharge. |
 | `-o, --oldGrid` | Uses the original 40 acre grid instead of the USG grid. |
@@ -91,13 +96,15 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 ### `runSteadyState` flags
 
 `--Desc` and `--CSDir` are required, as above. `--StartYr` and `--EndYr` set the steady state period (defaults 1893 to
-1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results (defaults 1953 to 2020).
+1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results and canal diversions (defaults 1953
+to the config `endYear`).
 `--oldGrid` and `--mf6Grid40` work as in `runModel`.
 
 ### `project` flags
 
-`--Years` is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`), `--ProjectYears` is
-how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output.
+`--Years` (required) is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`),
+`--ProjectYears` is how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output. The
+projection starts the year after the results database ends.
 
 ## Output
 

@@ -20,6 +20,13 @@ const (
 	defaultSSLMode = "require"
 )
 
+// fallbackEndYear is only used when the config file has no endYear (written by older versions of init).
+const fallbackEndYear = 2020
+
+// configEndYear is the last year with model data, read from the config file. runModel and runSteadyState use it as
+// their default end year, so extending the model only needs `init --endYear`.
+var configEndYear int
+
 var user User
 var myEnv map[string]string
 
@@ -47,6 +54,7 @@ type User struct {
 	Port     string `json:"port,omitempty"`
 	DBName   string `json:"dbname,omitempty"`
 	SSLMode  string `json:"sslmode,omitempty"`
+	EndYear  int    `json:"endYear,omitempty"`
 }
 
 func initConfig() {
@@ -74,6 +82,12 @@ func initConfig() {
 	myEnv["port"] = valueOr(user.Port, defaultPort)
 	myEnv["dbname"] = valueOr(user.DBName, defaultDBName)
 	myEnv["sslmode"] = valueOr(user.SSLMode, defaultSSLMode)
+
+	configEndYear = user.EndYear
+	if configEndYear == 0 {
+		configEndYear = fallbackEndYear
+		fmt.Printf("No endYear in %s, using %d. Run 'EscModel init --endYear <year>' to set it.\n", configFile, fallbackEndYear)
+	}
 }
 
 func valueOr(v, fallback string) string {

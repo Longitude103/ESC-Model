@@ -117,7 +117,12 @@ func getDiversions(v *database.Setup) (diversions Diversions, efDiversions Diver
 	if v.SteadyState {
 		// steady state will need to generate diversions for 1895 through 1952 from the averages of the range
 		var SSDivs []SSDiversion
-		if err := v.PgDb.Select(&SSDivs, formattedQueries[1]); err != nil {
+		avgStart, avgEnd := v.AvgSYear, v.AvgEYear
+		if avgStart == 0 || avgEnd == 0 {
+			avgStart, avgEnd = 1953, 2020 // the span used before it was configurable
+		}
+		ssQry := fmt.Sprintf(formattedQueries[1], avgStart, avgEnd)
+		if err := v.PgDb.Select(&SSDivs, ssQry); err != nil {
 			v.Logger.Errorf("Error in getting diversion records with Excess Flow: %s", err)
 			return nil, nil, err
 		}

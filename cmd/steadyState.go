@@ -24,6 +24,9 @@ var runSteadyStateCmd = &cobra.Command{
 		eYr, _ := cmd.Flags().GetInt("EndYr")
 		asYr, _ := cmd.Flags().GetInt("AvgStart")
 		aeYr, _ := cmd.Flags().GetInt("AvgEnd")
+		if aeYr == 0 {
+			aeYr = configEndYear
+		}
 		csDir, _ := cmd.Flags().GetString("CSDir")
 		desc, _ := cmd.Flags().GetString("Desc")
 		oldGrid, _ := cmd.Flags().GetBool("oldGrid")
@@ -34,7 +37,7 @@ var runSteadyStateCmd = &cobra.Command{
 			return
 		}
 
-		if err := runSteadyState(csDir, desc, sYr, eYr, asYr, aeYr, oldGrid, mf6Grid40, myEnv); err != nil {
+		if err := runSteadyState(desc, csDir, sYr, eYr, asYr, aeYr, oldGrid, mf6Grid40, myEnv); err != nil {
 			pterm.Error.Printf("Error in Application: %s\n", err)
 			os.Exit(1)
 		}
@@ -46,7 +49,7 @@ func init() {
 	runSteadyStateCmd.Flags().IntP("StartYr", "s", 1893, "Sets the start year of Command")
 	runSteadyStateCmd.Flags().IntP("EndYr", "e", 1952, "Sets the end year of Command")
 	runSteadyStateCmd.Flags().IntP("AvgStart", "a", 1953, "Sets the start year of Averaging")
-	runSteadyStateCmd.Flags().IntP("AvgEnd", "q", 2020, "Sets the end year of Averaging")
+	runSteadyStateCmd.Flags().IntP("AvgEnd", "q", 0, "Sets the end year of Averaging (default: endYear from the config file)")
 	runSteadyStateCmd.Flags().StringP("CSDir", "c", "", "REQUIRED CropSim Directory path")
 	runSteadyStateCmd.Flags().StringP("Desc", "d", "", "REQUIRED Model Description")
 	runSteadyStateCmd.Flags().BoolP("oldGrid", "o", false, "If flag set, the model will use the 40 acre grid, not USG as default")
@@ -66,6 +69,7 @@ func runSteadyState(mDesc, CSDir string, StartYr, EndYr, AvgStart, AvgEnd int, o
 	pterm.Info.Println("Setting up results database")
 	var opts []database.Option
 	opts = append(opts, database.WithSteadyState(StartYr, EndYr))
+	opts = append(opts, database.WithAverageYears(AvgStart, AvgEnd))
 
 	if oldGrid {
 		opts = append(opts, database.WithOldGrid())

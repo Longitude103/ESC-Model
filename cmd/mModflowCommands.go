@@ -71,12 +71,10 @@ func makeModflowFiles() error {
 		return err
 	}
 
-	var aggWel, aggRch []database.MfResults
-
 	if steadyState {
 		pterm.Info.Println("Steady State Run Detected, will only make RCH File.")
 		pterm.Info.Println("Processing RCH from Local DB")
-		aggRch, err = database.GetAggResults(db, false, []string{})
+		aggRch, err := database.GetAggResults(db, false, []string{})
 		if err != nil {
 			return err
 		}
@@ -89,64 +87,59 @@ func makeModflowFiles() error {
 		return nil
 	}
 
-	if !steadyState {
-		if !allWelFK {
-			aggWel, err = database.GetAggResults(db, true, a.WellFK)
-			if err != nil {
-				return err
-			}
-
-			if err := MakeFiles(aggWel, true, false, a.RowCol, outputName("AggregateWEL", suffix), path, mDesc, startDate, endDate); err != nil {
-				return err
-			}
-		}
-
-		var singleWELResults = make(map[string][]database.MfResults)
-		var singleRCHResults = make(map[string][]database.MfResults)
-
-		for _, w := range a.WellFK {
-			singleWELResults[w], err = database.SingleResult(db, true, w)
-			if err != nil {
-				return err
-			}
-		}
-
-		for _, r := range a.RchFK {
-			singleRCHResults[r], err = database.SingleResult(db, false, r)
-			if err != nil {
-				return err
-			}
-		}
-
-		for k := range singleWELResults {
-			if len(singleWELResults[k]) > 0 {
-				fn := outputName(fmt.Sprintf("%sWEL", k), suffix)
-				if err := MakeFiles(singleWELResults[k], true, false, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
-					return err
-				}
-			}
-		}
-
-		for k := range singleRCHResults {
-			if len(singleRCHResults[k]) > 0 {
-				fn := outputName(fmt.Sprintf("%sRCH", k), suffix)
-				if err := MakeFiles(singleRCHResults[k], false, true, a.RowCol, fn, path, mDesc, startDate, endDate); err != nil {
-					return err
-				}
-			}
-		}
-
-		if !allRchFK {
-			aggRch, err = database.GetAggResults(db, false, a.RchFK)
-			if err != nil {
-				return err
-			}
-
-			if err := MakeFiles(aggRch, false, true, a.RowCol, outputName("AggregateRCH", suffix), path, mDesc, startDate, endDate); err != nil {
-				return err
-			}
-		}
+	// collect every file to write first, so the progress bar knows the total
+	type mfJob struct {
+		name     string
+		wel, rch bool
+		results  func() ([]database.MfResults, error)
 	}
+	var jobs []mfJob
+
+	if !allWelFK {
+		jobs = append(jobs, mfJob{name: outputName("AggregateWEL", suffix), wel: true,
+			results: func() ([]database.MfResults, error) { return database.GetAggResults(db, true, a.WellFK) }})
+	}
+
+	for _, w := range a.WellFK {
+		jobs = append(jobs, mfJob{name: outputName(fmt.Sprintf("%sWEL", w), suffix), wel: true,
+			results: func() ([]database.MfResults, error) { return database.SingleResult(db, true, w) }})
+	}
+
+	for _, r := range a.RchFK {
+		jobs = append(jobs, mfJob{name: outputName(fmt.Sprintf("%sRCH", r), suffix), rch: true,
+			results: func() ([]database.MfResults, error) { return database.SingleResult(db, false, r) }})
+	}
+
+	if !allRchFK {
+		jobs = append(jobs, mfJob{name: outputName("AggregateRCH", suffix), rch: true,
+			results: func() ([]database.MfResults, error) { return database.GetAggResults(db, false, a.RchFK) }})
+	}
+
+	written := 0
+	bar, _ := pterm.DefaultProgressbar.WithTotal(len(jobs)).WithTitle("Writing MODFLOW files").Start()
+	for _, j := range jobs {
+		bar.UpdateTitle("Querying " + j.name)
+		res, err := j.results()
+		if err != nil {
+			_, _ = bar.Stop()
+			return err
+		}
+
+		if len(res) > 0 {
+			bar.UpdateTitle("Writing " + j.name)
+			if err := MakeFiles(res, j.wel, j.rch, a.RowCol, j.name, path, mDesc, startDate, endDate); err != nil {
+				_, _ = bar.Stop()
+				return err
+			}
+			written++
+			pterm.Success.Println("Wrote " + j.name)
+		} else {
+			pterm.Info.Println("No results for " + j.name + ", skipped")
+		}
+		bar.Increment()
+	}
+	_, _ = bar.Stop()
+	pterm.Success.Printf("Created %d files in %s\n", written, path)
 
 	return nil
 }

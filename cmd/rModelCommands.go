@@ -23,6 +23,9 @@ var runModelCmd = &cobra.Command{
 		debug, _ := cmd.Flags().GetBool("debug")
 		sYr, _ := cmd.Flags().GetInt("StartYr")
 		eYr, _ := cmd.Flags().GetInt("EndYr")
+		if eYr == 0 {
+			eYr = configEndYear
+		}
 		csDir, _ := cmd.Flags().GetString("CSDir")
 		ef, _ := cmd.Flags().GetBool("noExcessFlow")
 		desc, _ := cmd.Flags().GetString("Desc")
@@ -50,7 +53,7 @@ func init() {
 	rootCmd.AddCommand(runModelCmd)
 	runModelCmd.Flags().BoolP("debug", "b", false, "sets debugger for more log information")
 	runModelCmd.Flags().IntP("StartYr", "s", 1997, "Sets the start year of Command")
-	runModelCmd.Flags().IntP("EndYr", "e", 2020, "Sets the end year of Command")
+	runModelCmd.Flags().IntP("EndYr", "e", 0, "Sets the end year of Command (default: endYear from the config file)")
 	runModelCmd.Flags().StringP("CSDir", "c", "", "REQUIRED CropSim Directory path")
 	runModelCmd.Flags().BoolP("noExcessFlow", "n", false, "Sets to use Excess Flow or Not")
 	runModelCmd.Flags().StringP("Desc", "d", "", "REQUIRED Model Description")
