@@ -41,7 +41,7 @@ func Dryland(v *database.Setup, dryParcels []parcels.Parcel, cCData []database.C
 				if rf[m] > 0 {
 					if err := v.RchDb.Add(database.RchResult{Node: dryCells[i].Node, Size: dryCells[i].CellArea,
 						Dt:       time.Date(y, time.Month(m+1), 1, 0, 0, 0, 0, time.UTC),
-						FileType: 101, Result: rf[m] * dryCells[i].DryArea / parcelArea}); err != nil {
+						FileType: dryCells[i].FileType(), Result: rf[m] * dryCells[i].DryArea / parcelArea}); err != nil {
 						return err
 					}
 				}

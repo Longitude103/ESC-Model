@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"strings"
 )
 
 // DryCell is a struct that holds the data for each cell and the parcel data associated with it including crops and
@@ -15,6 +16,18 @@ type DryCell struct {
 	DryArea  float64         `db:"d_area"`
 	PId      int64           `db:"parcel_id"`
 	Nrd      string          `db:"nrd"`
+}
+
+// FileType returns the RCH file type for the cell's dryland recharge: 128 NP, 129 SP, or 101 when the NRD is unknown.
+func (d DryCell) FileType() int {
+	switch strings.ToLower(d.Nrd) {
+	case "np":
+		return 128
+	case "sp":
+		return 129
+	default:
+		return 101
+	}
 }
 
 // GetDryCells is a function that returns a struct of cells with parcels that are within it including the crops and acres

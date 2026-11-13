@@ -68,7 +68,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `init` | Saves your database login to `.configjson`. |
 | `runModel` | Runs the model and writes a results database (see flags below). |
 | `runSteadyState` | Runs the steady state model, averaging CropSim results over a span of years. |
-| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use, a suffix for the file names (for example `task3_npnrd`, giving `AggregateWEL_task3_npnrd.WEL6`) and the description for the file headers. Each WEL file's flow-reduction CSV is named after that file (`<file>_reduction.csv`). |
+| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use, a suffix for the file names (for example `task3_npnrd`, giving `AggregateWEL_task3_npnrd.WEL6`) and the description for the file headers (pre-filled from the scenario's notes: a `project` scenario's description, otherwise the run's). Each WEL file's flow-reduction CSV is named after that file (`<file>_reduction.csv`). |
 | `qcResults` | Summarizes a results database (annual recharge by type) and can write GeoJSON for GIS review. |
 | `project` | Projects pumping and recharge forward for the Robust Review analysis from an existing results database. |
 | `parcel-delete` | Deletes a parcel, and its junction table rows, from the land use data. |
@@ -90,7 +90,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `-p, --post97` | Post 1997 run: holds 1997 acres and crop types constant, no excess flows. |
 | `-r, --noRetirements` | Puts retired parcels back using net pumping. |
 | `-a, --AllocAnalysis` | Allocation analysis mode. |
-| `-t, --TotalDep` | Total depletion mode. |
+| `-t, --TotalDep` | Total depletion mode (no GW-only parcels and no municipal or industrial pumping). |
 | `-z, --P97Dep` | Post 1997 depletion analysis mode. |
 
 ### `runSteadyState` flags
