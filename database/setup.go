@@ -31,6 +31,8 @@ type Setup struct {
 	P97Dep        bool
 	NoRetire      bool
 	PermRetire    bool
+	AvgSYear      int // steady state: first year averaged for CropSim and diversions
+	AvgEYear      int // steady state: last year averaged
 }
 
 type Option func(*Setup)
@@ -147,6 +149,14 @@ func WithPermRetire() Option {
 }
 
 // WithSteadyState sets the Steady State Bool to true and also sets the years to SYear to 1893 and EYear to 1952
+// WithAverageYears sets the span of years that steady state averages CropSim results and canal diversions over.
+func WithAverageYears(startYr, endYr int) Option {
+	return func(s *Setup) {
+		s.AvgSYear = startYr
+		s.AvgEYear = endYr
+	}
+}
+
 func WithSteadyState(startYr, endYr int) Option {
 	return func(s *Setup) {
 		s.SteadyState = true

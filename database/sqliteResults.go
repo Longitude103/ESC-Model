@@ -23,8 +23,8 @@ func (r *SqliteResult) ChangeYear(year int) {
 type SqliteResults []SqliteResult
 
 func GetResults(db *sqlx.DB, year int) (SqliteResults, error) {
-	if year < 1953 || year > 2020 {
-		return nil, errors.New("year must be between 1953 and 2020")
+	if year < 1953 {
+		return nil, errors.New("year must be 1953 or later")
 	}
 
 	var results SqliteResults
@@ -55,8 +55,8 @@ func (r *SqliteWelResult) ChangeYear(year int) {
 type SqliteWelResults []SqliteWelResult
 
 func GetWelResults(db *sqlx.DB, year int, noRetirements bool) (SqliteWelResults, error) {
-	if year < 1953 || year > 2020 {
-		return nil, errors.New("year must be between 1953 and 2020")
+	if year < 1953 {
+		return nil, errors.New("year must be 1953 or later")
 	}
 
 	var results SqliteWelResults

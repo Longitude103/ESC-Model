@@ -19,7 +19,7 @@ It is written in [Go](https://go.dev/). Pre-built binaries for Windows, macOS an
 2. Save your database login (once per computer, see [Database](#database)):
 
    ```
-   EscModel init -u <username> -p <password>
+   EscModel init -u <username> -p <password> --endYear 2024
    ```
 
 3. Run the model, pointing it at the folder of CropSim monthly output files:
@@ -52,6 +52,12 @@ EscModel init -u <username> -p <password>
 This writes a `.configjson` file in the folder you run the command from. Keep that file private; it holds your password.
 The host, port, database name and SSL mode default to the WWUMM server. Override them with `--host`, `--port`,
 `--dbname` and `--sslmode` if needed (for example `--sslmode disable` for a local development database).
+If the database server moves, run `init` again with the new `--host`; you don't need to change or rebuild the code.
+
+`--endYear` saves the last year with model data. `runModel` uses it as its default end year and `runSteadyState` as the
+default end of its averaging period, so extending the model only needs `init --endYear <year>`, not a code change. A
+config file without it falls back to 2020 and prints a reminder. External (outside-NRD) recharge and pumping use their
+data through the last year in the `ext_recharge` and `ext_pumping` tables and repeat that year after it.
 
 ## Commands
 
@@ -62,7 +68,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `init` | Saves your database login to `.configjson`. |
 | `runModel` | Runs the model and writes a results database (see flags below). |
 | `runSteadyState` | Runs the steady state model, averaging CropSim results over a span of years. |
-| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use. |
+| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use, a suffix for the file names (for example `task3_npnrd`, giving `AggregateWEL_task3_npnrd.WEL6`) and the description for the file headers (pre-filled from the scenario's notes: a `project` scenario's description, otherwise the run's). Each WEL file's flow-reduction CSV is named after that file (`<file>_reduction.csv`). |
 | `qcResults` | Summarizes a results database (annual recharge by type) and can write GeoJSON for GIS review. |
 | `project` | Projects pumping and recharge forward for the Robust Review analysis from an existing results database. |
 | `parcel-delete` | Deletes a parcel, and its junction table rows, from the land use data. |
@@ -76,7 +82,7 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `-d, --Desc` | **Required.** Description of the run. |
 | `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files. |
 | `-s, --StartYr` | First year to run (default 1997). |
-| `-e, --EndYr` | Last year to run (default 2020). |
+| `-e, --EndYr` | Last year to run (default: `endYear` from the config). |
 | `-b, --debug` | More log output and limited writes. |
 | `-n, --noExcessFlow` | Leaves out excess flow recharge. |
 | `-o, --oldGrid` | Uses the original 40 acre grid instead of the USG grid. |
@@ -84,19 +90,21 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `-p, --post97` | Post 1997 run: holds 1997 acres and crop types constant, no excess flows. |
 | `-r, --noRetirements` | Puts retired parcels back using net pumping. |
 | `-a, --AllocAnalysis` | Allocation analysis mode. |
-| `-t, --TotalDep` | Total depletion mode. |
+| `-t, --TotalDep` | Total depletion mode (no GW-only parcels and no municipal or industrial pumping). |
 | `-z, --P97Dep` | Post 1997 depletion analysis mode. |
 
 ### `runSteadyState` flags
 
 `--Desc` and `--CSDir` are required, as above. `--StartYr` and `--EndYr` set the steady state period (defaults 1893 to
-1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results (defaults 1953 to 2020).
+1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results and canal diversions (defaults 1953
+to the config `endYear`).
 `--oldGrid` and `--mf6Grid40` work as in `runModel`.
 
 ### `project` flags
 
-`--Years` is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`), `--ProjectYears` is
-how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output.
+`--Years` (required) is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`),
+`--ProjectYears` is how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output. The
+projection starts the year after the results database ends.
 
 ## Output
 
@@ -121,7 +129,13 @@ go build -o bin/esc-model .
 
 On Windows, install a GCC such as [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) first; see
 [windows_compile.md](windows_compile.md). The `Makefile` has `build` (macOS and Linux) and `build-win` targets for
-release binaries.
+local builds.
+
+### Releases
+
+Push a version tag (for example `git tag v1.7.0 && git push origin v1.7.0`). The Release workflow builds the Windows,
+macOS (Intel and Apple silicon) and Linux binaries on GitHub and attaches them to a new release, so nobody has to build
+on their own machine.
 
 ### Tests
 

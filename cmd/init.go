@@ -20,6 +20,7 @@ the username and password are needed.`,
 		port, _ := cmd.Flags().GetString("port")
 		dbName, _ := cmd.Flags().GetString("dbname")
 		sslMode, _ := cmd.Flags().GetString("sslmode")
+		endYear, _ := cmd.Flags().GetInt("endYear")
 
 		newUser := User{
 			Username: user,
@@ -28,6 +29,7 @@ the username and password are needed.`,
 			Port:     port,
 			DBName:   dbName,
 			SSLMode:  sslMode,
+			EndYear:  endYear,
 		}
 
 		// write to file and save in dir
@@ -58,4 +60,5 @@ func init() {
 	initCmd.Flags().String("port", "", "Database port (default "+defaultPort+")")
 	initCmd.Flags().String("dbname", "", "Database name (default "+defaultDBName+")")
 	initCmd.Flags().String("sslmode", "", "SSL mode (default "+defaultSSLMode+")")
+	initCmd.Flags().Int("endYear", 0, "Last year with model data; the default end year for runModel and runSteadyState averaging (e.g. 2024)")
 }

@@ -184,10 +184,33 @@ func GetDescription(db *sqlx.DB) (desc string, err error) {
 		return "", err
 	}
 
-	for _, n := range rslt {
-		if strings.ToLower(n.Note[:4]) == "desc" {
-			return n.Note, nil
+	return descriptionFromNotes(rslt)
+}
+
+// descriptionFromNotes picks the description for MODFLOW file headers. A scenario made with `project` adds a
+// "Robust Review Description" note to a copy of the run's database; that one wins over the original run's "Desc:".
+// If several notes of a kind exist, the newest (last) is used.
+func descriptionFromNotes(notes []ResultsNote) (string, error) {
+	const rrPrefix = "robust review description:"
+	var runDesc, scenarioDesc string
+
+	for _, n := range notes {
+		lower := strings.ToLower(n.Note)
+		switch {
+		case strings.HasPrefix(lower, rrPrefix):
+			if d := strings.TrimSpace(n.Note[len(rrPrefix):]); d != "" {
+				scenarioDesc = d
+			}
+		case strings.HasPrefix(lower, "desc"):
+			runDesc = n.Note
 		}
+	}
+
+	if scenarioDesc != "" {
+		return scenarioDesc, nil
+	}
+	if runDesc != "" {
+		return runDesc, nil
 	}
 
 	return "", errors.New("could not find description")
@@ -276,7 +299,7 @@ func GetNoRetirement(db *sqlx.DB) (bool, error) {
 
 func getAllDBResults(db *sqlx.DB) ([]ResultsNote, error) {
 	var rslt []ResultsNote
-	query := "SELECT * FROM results_notes"
+	query := "SELECT * FROM results_notes ORDER BY id"
 
 	if err := db.Select(&rslt, query); err != nil {
 		return rslt, err

@@ -21,6 +21,10 @@ var projectOutput = &cobra.Command{
 	Long:  "Projection command used to create a file set for robust review analysis.",
 	Run: func(cmd *cobra.Command, args []string) {
 		yearsStr, _ := cmd.Flags().GetString("Years")
+		if strings.TrimSpace(yearsStr) == "" {
+			pterm.Error.Println("--Years is required, e.g. --Years \"2018, 2020, 2018\"")
+			return
+		}
 		var years repeatYears
 		err := years.parseAndSetYears(yearsStr)
 		if err != nil {
@@ -45,7 +49,7 @@ var projectOutput = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(projectOutput)
-	projectOutput.Flags().String("Years", "2020", "A list of years to use for the projection, e.g. 2018, 2020, 2018 in that order, surround in double quotes")
+	projectOutput.Flags().String("Years", "", "REQUIRED A list of years to use for the projection, e.g. 2018, 2020, 2018 in that order, surround in double quotes")
 	projectOutput.Flags().String("FileNames", "RR", "The name of the files to use for the projection output")
 	projectOutput.Flags().Int("ProjectYears", 50, "The number of years to project forward")
 	projectOutput.Flags().String("Desc", "Robust Review Analysis", "A description of the project run")
@@ -69,6 +73,21 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	noRetirements, err := database.GetNoRetirement(db)
 	if err != nil {
 		return err
+	}
+
+	// the projection starts the year after the results database ends
+	_, resultsEndYear, err := database.GetStartEndYrs(db)
+	if err != nil {
+		return err
+	}
+	if resultsEndYear == 0 {
+		return fmt.Errorf("could not find the end year in the results database notes")
+	}
+	projStart := resultsEndYear + 1
+	for _, y := range years.AllYears() {
+		if y > resultsEndYear {
+			return fmt.Errorf("projection year %d is after the last year in the results database (%d)", y, resultsEndYear)
+		}
 	}
 
 	path, timeStamp, err := Utils.MakeOutputDir("qc")
@@ -137,7 +156,7 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	year = years.StartYear()
 
 	spin.UpdateText("Starting Projection")
-	for yr := 2021; yr < 2021+projYears; yr++ {
+	for yr := projStart; yr < projStart+projYears; yr++ {
 		spin.UpdateText("Projecting Year " + strconv.Itoa(yr))
 		newRecords := make(database.SqliteResults, len(resultsData[year]))
 		newWelRecords := make(database.SqliteWelResults, len(welResultsData[year]))
@@ -183,10 +202,10 @@ func projectRR(myEnv map[string]string, years repeatYears, projYears int, fileNa
 	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Years: %s", years.String())}); err != nil {
 		return err
 	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", 2021)}); err != nil {
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Start Year: %d", projStart)}); err != nil {
 		return err
 	}
-	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", 2021+projYears-1)}); err != nil {
+	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review End Year: %d", projStart+projYears-1)}); err != nil {
 		return err
 	}
 	if err := resultsNote.Add(database.Note{Nt: fmt.Sprintf("Robust Review Description: %s", description)}); err != nil {
