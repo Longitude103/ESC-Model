@@ -135,7 +135,9 @@ func calcRo(Ro1 float64, diffRo float64, weight float64, area float64, aRo float
 
 	totalRunOff := (Ro1 + diffRo) * weight * area / 12 * aRo
 
-	roToRch = runOffToRch(runOff, lossFactor, perToRch)
+	// runOffToRch applies the loss factor itself, so it takes the total runoff (it was previously passed runOff
+	// before runOff was assigned, which made the recharge from runoff always zero)
+	roToRch = runOffToRch(totalRunOff, lossFactor, perToRch)
 	runOff = totalRunOff * lossFactor
 
 	return

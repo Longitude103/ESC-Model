@@ -15,6 +15,8 @@ type IrrCell struct {
 	ParcelId int             `db:"parcel_id"`
 	Nrd      string          `db:"nrd"`
 	Mtg      sql.NullFloat64 `db:"mtg"`
+	Soil     int             `db:"soil_code"`
+	CZone    int             `db:"coeff_zone"`
 }
 
 // GetCellsIrr gets the cells that have irrigation within them and splits them by parcel. If a cell has multiple parcels
@@ -30,7 +32,7 @@ func GetCellsIrr(v *Setup, yr int) ([]IrrCell, error) {
 		}
 	}
 
-	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
+	query := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
 									parcel_id, nrd from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, geom from np.t%d_irr UNION SELECT parcel_id, 'sp' nrd, geom from sp.t%d_irr) i
         on st_intersects(c.geom, i.geom) where c.cell_type = %d;`, yr, yr, v.CellType())
 
@@ -60,7 +62,7 @@ func (i IrrCell) GetLossFactor() float64 {
 // This includes both nrd irrigated acres. It limits to the actual parcels during that year without GWO, then goes
 // to 1997 for GWO parcels, combines them and sends it off.
 func GetCellsIrrPost97(v *Setup, yr int) ([]IrrCell, error) {
-	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
+	query := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
        parcel_id, nrd
 from public.model_cells c
     inner join (SELECT parcel_id, 'np' nrd, geom
@@ -76,7 +78,7 @@ from public.model_cells c
 		return nil, err
 	}
 
-	query97GWO := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
+	query97GWO := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area,
        parcel_id + 30000 as parcel_id, nrd
 from public.model_cells c
     inner join (SELECT parcel_id, 'np' nrd, geom
@@ -100,7 +102,7 @@ from public.model_cells c
 // GetSSCellsIrr is a function to return the irrigated cells for 1953 only where there are surface water parcels. Any GW only parcels
 // are not included in this function.
 func GetSSCellsIrr(v *Setup) ([]IrrCell, error) {
-	query := fmt.Sprintf(`SELECT node, mtg, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
+	query := fmt.Sprintf(`SELECT node, mtg, c.soil_code, c.coeff_zone, st_area(c.geom)/43560 c_area, st_area(st_intersection(c.geom, i.geom))/43560 i_area, 
 									parcel_id, nrd from public.model_cells c inner join (SELECT parcel_id, 'np' nrd, 
 									geom from np.t1953_irr where sw = true UNION SELECT parcel_id, 'sp' nrd, geom from sp.t1953_irr where sw = true) i
         on st_intersects(c.geom, i.geom) where c.cell_type = %d;`, v.CellType())

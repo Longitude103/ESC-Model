@@ -35,17 +35,19 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 		}
 
 		p.UpdateTitle(fmt.Sprintf("Saving %d Irr Cell Data", y))
-		// use the RO + DP from parcel and split by acres to get recharge, will need to keep separate files for the various
-		// distributions of scenarios.
+		// use the RO + DP from the parcel row for the cell's soil and split by acres to get recharge, will need to keep
+		// separate files for the various distributions of scenarios.
+		parcelIdx := indexParcels(parcelList)
+		unmatched := 0
 		for i := 0; i < len(irrCells); i++ {
-			p, err := parcelFilterById(parcelList, irrCells[i].ParcelId, irrCells[i].Nrd)
-			if err != nil {
-				if err.Error() == "no parcel with that id" {
-					continue
-				} else {
-					v.Logger.Errorf("parcelFilterById error for parcel Id: %d, year: %d, and nrd: %s", irrCells[i].ParcelId, y, irrCells[i].Nrd)
-					return err
-				}
+			rows, ok := parcelIdx[parcelKey{id: irrCells[i].ParcelId, nrd: irrCells[i].Nrd}]
+			if !ok {
+				continue
+			}
+
+			p, parcelArea, matched := cellParcelRow(rows, irrCells[i].Soil, irrCells[i].CZone)
+			if !matched {
+				unmatched++
 			}
 
 			fileType, err := assignRCHType(p.Nrd, p.Sw.Bool, p.Gw.Bool, p.IsPost97())
@@ -59,9 +61,9 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 
 			cellRecharge := [12]float64{}
 			for j := 0; j < 12; j++ {
-				cellRecharge[j], err = cellRCH(p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea, irrCells[i].GetLossFactor(), perToRch)
+				cellRecharge[j], err = cellRCH(p.Ro[j], p.Dp[j], parcelArea, irrCells[i].IrrArea, irrCells[i].GetLossFactor(), perToRch)
 				if err != nil {
-					v.Logger.Errorf("error in cellRCH where RO: %f, DP: %f, Area: %f, IrrArea: %f", p.Ro[j], p.Dp[j], p.Area, irrCells[i].IrrArea)
+					v.Logger.Errorf("error in cellRCH where RO: %f, DP: %f, Area: %f, IrrArea: %f", p.Ro[j], p.Dp[j], parcelArea, irrCells[i].IrrArea)
 					return err
 				}
 
@@ -78,6 +80,10 @@ func IrrigationRCH(v *database.Setup, AllParcels []parcels.Parcel, cCData []data
 				}
 
 			}
+		}
+
+		if unmatched > 0 {
+			v.Logger.Infof("IrrigationRCH %d: %d cells had no parcel row for their soil and coefficient zone, used whole-parcel values", y, unmatched)
 		}
 		p.Increment()
 	}

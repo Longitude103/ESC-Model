@@ -20,25 +20,16 @@ type efPeriod struct {
 	LossPercet sql.NullFloat64 `db:"loss_percent"`
 }
 
+// GetYearAndMonths returns the year of the excess flow period and the months it covers, from the start date through
+// the end date. (It used to start one day after the start date, which dropped the first month of a period that began
+// on the last day of a month.)
 func (e *efPeriod) GetYearAndMonths() (year int, months []int) {
 	year = e.StartDate.Time.Year()
-	dt := e.StartDate.Time.Add(time.Hour * 24)
-	daysBetween := int(e.EndDate.Time.Sub(e.StartDate.Time).Hours() / 24)
+	months = append(months, int(e.StartDate.Time.Month()))
 
-	months = append(months, int(dt.Month()))
-
-	for i := 0; i < daysBetween; i++ {
-		dt = dt.Add(time.Hour * 24)
-
-		addIt := true
-		for _, m := range months {
-			if m == int(dt.Month()) {
-				addIt = false
-			}
-		}
-
-		if addIt {
-			months = append(months, int(dt.Month()))
+	for dt := e.StartDate.Time.AddDate(0, 0, 1); !dt.After(e.EndDate.Time); dt = dt.AddDate(0, 0, 1) {
+		if m := int(dt.Month()); m != months[len(months)-1] {
+			months = append(months, m)
 		}
 	}
 

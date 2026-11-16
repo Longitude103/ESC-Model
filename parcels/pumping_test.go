@@ -79,42 +79,49 @@ func TestPumping_adjustmentFactor(t *testing.T) {
 }
 
 func TestPumping_estimatePumping(t *testing.T) {
-	v := dbConnection(t)
+	// EstimatePumping only reads the run mode flags, so no database is needed. Copies keep the shared test parcels
+	// (which other tests change) out of it.
+	v := &database.Setup{}
 
-	//zero pumping
-	p1.Pump = [12]float64{}
-	// alter NIR
-	p1.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
-	p1.Subarea = sql.NullString{String: "FA", Valid: true}
+	// commingled sprinkler parcel: (NIR - SW x eff) / eff
+	sp := p1
+	sp.AppEff = 0.85
+	sp.Pump = [12]float64{}
+	sp.Nir = [12]float64{0, 0, 0, 0, 3, 25, 40, 45, 20, 0, 0, 0}
+	sp.Subarea = sql.NullString{String: "FA", Valid: true}
 
-	err := p1.EstimatePumping(v)
-	if err != nil {
+	if err := sp.EstimatePumping(v); err != nil {
 		t.Errorf("Should not return error")
 	}
 
-	mayPump := Utils.RoundTo(p1.Pump[4], 2)
-	junePump := Utils.RoundTo(p1.Pump[5], 2)
-	if mayPump != 2.58 || junePump != 17.06 {
-		t.Errorf("Pumping is not calculated correctly: May got %f, expected 2.58; June got %f, expected 17.06", mayPump, junePump)
+	// May (3 - 1 x 0.85) / 0.85, June (25 - 13 x 0.85) / 0.85
+	mayPump := Utils.RoundTo(sp.Pump[4], 2)
+	junePump := Utils.RoundTo(sp.Pump[5], 2)
+	if mayPump != 2.53 || junePump != 16.41 {
+		t.Errorf("Pumping is not calculated correctly: May got %f, expected 2.53; June got %f, expected 16.41", mayPump, junePump)
 	}
 
-	// testing that it doesn't estimate for parcels after 2016
-	p3.Yr = 2017
-	_ = p3.EstimatePumping(v)
-	want := 2.34
-	got := Utils.RoundTo(p3.Pump[6], 2)
-
-	if want != got {
-		t.Errorf("Wanted Pumping %f (shouldn't have changed), Got Pumping %f", want, got)
+	// metered years (NP after 2016) keep their pumping
+	gwo := p3
+	gwo.AppEff = 0.65
+	gwo.Yr = 2017
+	_ = gwo.EstimatePumping(v)
+	if got := Utils.RoundTo(gwo.Pump[6], 2); got != 2.34 {
+		t.Errorf("Wanted Pumping 2.34 (shouldn't have changed), Got Pumping %f", got)
 	}
 
-	// testing post97 settings
+	// post 97 runs estimate GW only parcels: the TFG example, July NIR 4.98 / 0.65 flood efficiency = 7.66
 	v.Post97 = true
-	_ = p3.EstimatePumping(v)
-	want = 7.66
-	got = Utils.RoundTo(p3.Pump[6], 2)
+	_ = gwo.EstimatePumping(v)
+	if got := Utils.RoundTo(gwo.Pump[6], 2); got != 7.66 {
+		t.Errorf("Wanted Pumping 7.66, Got Pumping %f", got)
+	}
+}
 
-	if want != got {
-		t.Errorf("Wanted Pumping %f, Got Pumping %f", want, got)
+func TestPumping_estimatePumpingNoEfficiency(t *testing.T) {
+	p := parcels.Parcel{ParcelNo: 1, Nrd: "np", Yr: 2000, Gw: sql.NullBool{Valid: true, Bool: true},
+		Nir: [12]float64{6: 1}}
+	if err := p.EstimatePumping(&database.Setup{}); err == nil {
+		t.Error("expected an error when the parcel has no application efficiency")
 	}
 }

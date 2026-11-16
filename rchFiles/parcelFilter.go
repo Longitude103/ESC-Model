@@ -23,19 +23,3 @@ func parcelFilterByYear(parcels []parcels.Parcel, yr int) (p []parcels.Parcel, e
 
 	return
 }
-
-// parcelFilterById is a function to filter the slice of parcels by an ID and NRD and return a single parcel.
-func parcelFilterById(p []parcels.Parcel, id int, nrd string) (parcels.Parcel, error) {
-	if len(p) < 1 {
-		return parcels.Parcel{}, errors.New("no parcels in slice for id")
-	}
-
-	for i := 0; i < len(p); i++ {
-		if p[i].ParcelNo == id && p[i].Nrd == nrd {
-			return p[i], nil
-		}
-	}
-
-	errMessage := "no parcel with that id"
-	return parcels.Parcel{}, errors.New(errMessage)
-}

@@ -24,15 +24,3 @@ func Test_parcelFilterByYear(t *testing.T) {
 		t.Errorf("should have returned no records and and error")
 	}
 }
-
-func Test_parcelFilterById(t *testing.T) {
-	p, err := parcelFilterById(testParcelSlice, 2, "SP")
-	if p.ParcelNo != 2 && err != nil {
-		t.Error("function should have return parcel 2 and no error")
-	}
-
-	_, err = parcelFilterById(testParcelSlice, 6, "NP")
-	if err == nil {
-		t.Error("function should return an error but didn't")
-	}
-}

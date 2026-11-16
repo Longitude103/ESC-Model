@@ -126,27 +126,31 @@ func getLossPercent(divs []Diversion, v *database.Setup) (efDiv efDiversions) {
 		v.Logger.Errorf("Error in getting Excess Flow Periods: %s", err)
 	}
 
+	return matchEFPeriods(divs, efPeriods)
+}
+
+// matchEFPeriods pairs each monthly excess flow diversion with the excess flow period that covers its month. The
+// monthly diversion already holds every excess flow day in that month, so it is matched to one period only (the first
+// that covers it); matching it to every period in the month counted the same water more than once.
+func matchEFPeriods(divs []Diversion, efPeriods []efPeriod) (efDiv efDiversions) {
 	for _, d := range divs {
-		// this is a Diversion
 		for _, e := range efPeriods {
+			if d.CanalId != e.CanalId {
+				continue
+			}
+
 			y, months := e.GetYearAndMonths()
-			if d.CanalId == e.CanalId {
-				if y == d.DivDate.Time.Year() {
-					if int(d.DivDate.Time.Month()) >= months[0] {
-						if int(d.DivDate.Time.Month()) <= months[len(months)-1] {
-							// make the new div record with loss
-							ef := efDiversion{
-								Diversion: Diversion{
-									CanalId:   d.CanalId,
-									DivDate:   sql.NullTime{Time: d.DivDate.Time, Valid: d.DivDate.Valid},
-									DivAmount: sql.NullFloat64{Float64: d.DivAmount.Float64, Valid: d.DivAmount.Valid},
-								},
-								LossPercent: e.LossPercet,
-							}
-							efDiv = append(efDiv, ef)
-						}
-					}
-				}
+			m := int(d.DivDate.Time.Month())
+			if y == d.DivDate.Time.Year() && m >= months[0] && m <= months[len(months)-1] {
+				efDiv = append(efDiv, efDiversion{
+					Diversion: Diversion{
+						CanalId:   d.CanalId,
+						DivDate:   sql.NullTime{Time: d.DivDate.Time, Valid: d.DivDate.Valid},
+						DivAmount: sql.NullFloat64{Float64: d.DivAmount.Float64, Valid: d.DivAmount.Valid},
+					},
+					LossPercent: e.LossPercet,
+				})
+				break
 			}
 		}
 	}

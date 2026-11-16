@@ -74,14 +74,19 @@ func getFileData(filePath string, logger *logging.TheLogger) ([]StationResults, 
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	scanner.Scan()
 
 	var stationData []StationResults
-	lineNo := 1
+	lineNo := 0
 	for scanner.Scan() {
 		lineNo++
 		elements := strings.Fields(scanner.Text())
 		if len(elements) == 0 {
+			continue
+		}
+
+		// CropSim output normally has no header, so the first line is data (always skipping it dropped the 1953
+		// record for every station). Skip the first line only when it is a header, i.e. its year isn't a number.
+		if lineNo == 1 && isHeader(elements) {
 			continue
 		}
 
@@ -117,4 +122,15 @@ func getFileData(filePath string, logger *logging.TheLogger) ([]StationResults, 
 	}
 
 	return stationData, nil
+}
+
+// isHeader reports whether a line's fields look like a header rather than a data row: a data row has a numeric year
+// in its second field.
+func isHeader(elements []string) bool {
+	if len(elements) < 2 {
+		return true
+	}
+
+	_, err := strconv.Atoi(elements[1])
+	return err != nil
 }
