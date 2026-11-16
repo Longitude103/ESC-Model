@@ -1,0 +1,76 @@
+name: Release
+
+# Push a tag such as v1.7.0 to build Windows, macOS and Linux binaries and attach them to a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            name: wwumm-amd64-win
+            ext: .exe
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            name: wwumm-arm64-darwin
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            name: wwumm-amd64-darwin
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            name: wwumm-amd64-linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # go-sqlite3 needs cgo, so each binary is built on its own OS (the Windows runner ships with MinGW gcc).
+      - name: Build
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "1"
+        run: |
+          if [ "$GOOS" = "darwin" ] && [ "$GOARCH" = "amd64" ]; then
+            export CGO_CFLAGS="-arch x86_64" CGO_LDFLAGS="-arch x86_64"
+          fi
+          mkdir -p dist
+          go build -o "dist/${{ matrix.name }}_${GITHUB_REF_NAME}${{ matrix.ext }}" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

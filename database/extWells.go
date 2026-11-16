@@ -20,9 +20,15 @@ type ExtWell struct {
 // GetExternalWells is a function to query the external pumping from the database and returns a slice of ExtWell as well
 // as includes handling the debug mode.
 func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
+	// ext_pumping only has data through its last year; later model years repeat that last year.
+	lastDataYr, err := lastExtDataYear(v, "ext_pumping")
+	if err != nil {
+		return extWells, err
+	}
+
 	endYr := v.EYear
-	if v.EYear > 2014 {
-		endYr = 2014
+	if v.EYear > lastDataYr {
+		endYr = lastDataYr
 	}
 
 	extQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
@@ -36,12 +42,11 @@ func GetExternalWells(v *Setup) (extWells []ExtWell, err error) {
 		return extWells[:50], nil
 	}
 
-	// actual data is only through 2014, might remove this if the data is updated.
-	if v.EYear > 2014 {
+	if v.EYear > lastDataYr {
 		var extraWells []ExtWell
-		additionalYrs := v.EYear - 2014
+		additionalYrs := v.EYear - lastDataYr
 		extraQuery := fmt.Sprintf("select yr, mnth, file_type, pmp, node from ext_pumping inner join model_cells mc on "+
-			"st_contains(mc.geom, ext_pumping.geom) where yr = 2014 and mc.cell_type = %d;", v.CellType())
+			"st_contains(mc.geom, ext_pumping.geom) where yr = %d and mc.cell_type = %d;", lastDataYr, v.CellType())
 
 		if err := v.PgDb.Select(&extraWells, extraQuery); err != nil {
 			return extWells, errors.New("error getting data from ext_pumping table from DB")

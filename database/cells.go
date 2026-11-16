@@ -227,7 +227,7 @@ func GetSSCellAreas1(v *Setup) (cells []CellIntersect, err error) {
 		return nil, err
 	}
 
-	return cells, nil
+	return cells, setCellNRDs(v, cells)
 }
 
 // GetSSCellAreas2 is a function to return the amount of area within each model cell that is covered by parcels of surface water irrigated and
@@ -240,7 +240,21 @@ func GetSSCellAreas2(v *Setup) (cells []CellIntersect, err error) {
 		return nil, err
 	}
 
-	return cells, nil
+	return cells, setCellNRDs(v, cells)
+}
+
+// setCellNRDs fills in the NRD of each cell so natural vegetation recharge can be split into NP and SP file types.
+func setCellNRDs(v *Setup, cells []CellIntersect) error {
+	cellNRDs, err := GetCellNRDs(v)
+	if err != nil {
+		return err
+	}
+
+	for i := range cells {
+		cells[i].Nrd = cellNRDs[cells[i].Node]
+	}
+
+	return nil
 }
 
 func GetCellNRDs(v *Setup) (map[int]string, error) {

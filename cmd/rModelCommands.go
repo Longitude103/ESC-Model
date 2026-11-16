@@ -23,6 +23,9 @@ var runModelCmd = &cobra.Command{
 		debug, _ := cmd.Flags().GetBool("debug")
 		sYr, _ := cmd.Flags().GetInt("StartYr")
 		eYr, _ := cmd.Flags().GetInt("EndYr")
+		if eYr == 0 {
+			eYr = configEndYear
+		}
 		csDir, _ := cmd.Flags().GetString("CSDir")
 		ef, _ := cmd.Flags().GetBool("noExcessFlow")
 		desc, _ := cmd.Flags().GetString("Desc")
@@ -50,7 +53,7 @@ func init() {
 	rootCmd.AddCommand(runModelCmd)
 	runModelCmd.Flags().BoolP("debug", "b", false, "sets debugger for more log information")
 	runModelCmd.Flags().IntP("StartYr", "s", 1997, "Sets the start year of Command")
-	runModelCmd.Flags().IntP("EndYr", "e", 2020, "Sets the end year of Command")
+	runModelCmd.Flags().IntP("EndYr", "e", 0, "Sets the end year of Command (default: endYear from the config file)")
 	runModelCmd.Flags().StringP("CSDir", "c", "", "REQUIRED CropSim Directory path")
 	runModelCmd.Flags().BoolP("noExcessFlow", "n", false, "Sets to use Excess Flow or Not")
 	runModelCmd.Flags().StringP("Desc", "d", "", "REQUIRED Model Description")
@@ -99,6 +102,7 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 	if totalDep {
 		opts = append(opts, database.WithTotalDepletion())
 		flagsSet = append(flagsSet, "TotalDep")
+		flagsSet = append(flagsSet, "No municipal and industrial pumping")
 	}
 
 	if allocAnalysis {
@@ -300,10 +304,16 @@ func runModel(debug bool, CSDir *string, mDesc string, sY int, eY int, eF, p97, 
 	}
 	pterm.Success.Println("Successfully Completed External RCH")
 
-	if err := wells.MunicipalIndWells(v, resultsDB); err != nil {
-		return err
+	if v.TotalDep {
+		// total depletion leaves out municipal and industrial pumping
+		v.Logger.Info("Total Depletion run: municipal and industrial wells left out")
+		pterm.Info.Println("Total Depletion run: municipal and industrial wells left out")
+	} else {
+		if err := wells.MunicipalIndWells(v, resultsDB); err != nil {
+			return err
+		}
+		pterm.Success.Println("Successfully Completed MI Well Ops")
 	}
-	pterm.Success.Println("Successfully Completed MI Well Ops")
 
 	// write out anything still sitting in the WEL buffer (SS, external and MI wells), otherwise the last partial
 	// batch of up to 1023 records is never saved.
