@@ -2,7 +2,7 @@
 
 ## BUILD
 # go-sqlite3 needs CGO, so build on the full Debian-based Go image.
-FROM golang:1.26-trixie AS build
+FROM golang:1.27-trixie AS build
 
 WORKDIR /app
 
