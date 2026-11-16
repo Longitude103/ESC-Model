@@ -61,26 +61,56 @@ data through the last year in the `ext_recharge` and `ext_pumping` tables and re
 
 ## Commands
 
-Run the binary with no arguments, or with `--help`, to see the full list. Add `--help` after any command to see its flags.
+Run the binary with no arguments, or with `--help`, to see the full list. Add `--help` after any command to see its
+flags. Every command except `init`, `help` and `completion` reads the database login from `.configjson`, so run
+`init` first.
 
 | Command | What it does |
 | --- | --- |
-| `init` | Saves your database login to `.configjson`. |
-| `runModel` | Runs the model and writes a results database (see flags below). |
-| `runSteadyState` | Runs the steady state model, averaging CropSim results over a span of years. |
-| `mfFiles` | Creates MODFLOW 6 RCH and WEL files from a results database. Asks which results to use, a suffix for the file names (for example `task3_npnrd`, giving `AggregateWEL_task3_npnrd.WEL6`) and the description for the file headers (pre-filled from the scenario's notes: a `project` scenario's description, otherwise the run's). Each WEL file's flow-reduction CSV is named after that file (`<file>_reduction.csv`). |
-| `qcResults` | Summarizes a results database (annual recharge by type) and can write GeoJSON for GIS review. |
-| `project` | Projects pumping and recharge forward for the Robust Review analysis from an existing results database. |
-| `parcel-delete` | Deletes a parcel, and its junction table rows, from the land use data. |
-| `parcel-copy` | Copies a parcel from one year to another. |
-| `jct-delete` | Deletes a single parcel to well junction record. |
+| [`init`](#init) | Saves your database login to `.configjson`. |
+| [`runModel`](#runmodel) | Runs the model for a range of years and writes a results database. |
+| [`runSteadyState`](#runsteadystate) | Runs the steady state model, averaging CropSim results over a span of years. |
+| [`mfFiles`](#mffiles) | Creates MODFLOW 6 RCH and WEL files from a results database. |
+| [`qcResults`](#qcresults) | Summarizes a results database and can write graphs and GeoJSON for GIS review. |
+| [`project`](#project) | Projects pumping and recharge forward for the Robust Review analysis. |
+| [`parcel-delete`](#parcel-delete) | Deletes a parcel, and its junction table rows, from the land use data. |
+| [`parcel-copy`](#parcel-copy) | Copies a parcel, and its junction table rows, from one year to another. |
+| [`jct-delete`](#jct-delete) | Deletes a single parcel to well junction record. |
+| `completion` | Writes a shell autocompletion script (`bash`, `zsh`, `fish` or `powershell`). |
+| `help` | Shows help for any command, for example `EscModel help runModel`. |
 
-### `runModel` flags
+### `init`
+
+Saves the database login and settings to `.configjson` in the current folder. Run it once per computer, and again
+whenever any of these settings change.
+
+```
+EscModel init -u <username> -p <password> --endYear 2024
+```
 
 | Flag | Meaning |
 | --- | --- |
-| `-d, --Desc` | **Required.** Description of the run. |
-| `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files. |
+| `-u, --username` | Database user name. |
+| `-p, --password` | Database password. |
+| `--endYear` | Last year with model data. The default end year for `runModel` and for `runSteadyState` averaging. |
+| `--host` | Database host (default: the WWUMM server). |
+| `--port` | Database port (default: the WWUMM server's port). |
+| `--dbname` | Database name (default `wwumm`). |
+| `--sslmode` | PostgreSQL SSL mode (default `require`). |
+
+### `runModel`
+
+The main model run. It reads the source data from the database, runs the soil water balance for each parcel and writes
+a SQLite results database to `OutputFiles/results<timestamp>/`.
+
+```
+EscModel runModel --Desc "2024 update" --CSDir "<path>/CropSim/Output" --EndYr 2024
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `-d, --Desc` | **Required.** Description of the run. It is stored in the results database and used for file headers. |
+| `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files (`*_MON.TXT`). |
 | `-s, --StartYr` | First year to run (default 1997). |
 | `-e, --EndYr` | Last year to run (default: `endYear` from the config). |
 | `-b, --debug` | More log output and limited writes. |
@@ -93,18 +123,124 @@ Run the binary with no arguments, or with `--help`, to see the full list. Add `-
 | `-t, --TotalDep` | Total depletion mode (no GW-only parcels and no municipal or industrial pumping). |
 | `-z, --P97Dep` | Post 1997 depletion analysis mode. |
 
-### `runSteadyState` flags
+### `runSteadyState`
 
-`--Desc` and `--CSDir` are required, as above. `--StartYr` and `--EndYr` set the steady state period (defaults 1893 to
-1952), and `--AvgStart` and `--AvgEnd` set the years used to average the CropSim results and canal diversions (defaults 1953
-to the config `endYear`).
-`--oldGrid` and `--mf6Grid40` work as in `runModel`.
+Runs the steady state model and writes a results database the same way as `runModel`. CropSim results and canal
+diversions are averaged over the averaging period and applied to the steady state period.
 
-### `project` flags
+```
+EscModel runSteadyState --Desc "Steady state" --CSDir "<path>/CropSim/Output"
+```
 
-`--Years` (required) is a quoted, comma separated list of years to repeat (for example `"2018, 2020, 2018"`),
-`--ProjectYears` is how many years to project forward (default 50), and `--FileNames` and `--Desc` name the output. The
-projection starts the year after the results database ends.
+| Flag | Meaning |
+| --- | --- |
+| `-d, --Desc` | **Required.** Description of the run. |
+| `-c, --CSDir` | **Required.** Folder with the CropSim monthly output text files. |
+| `-s, --StartYr` | First year of the steady state period (default 1893). |
+| `-e, --EndYr` | Last year of the steady state period (default 1952). |
+| `-a, --AvgStart` | First year used for averaging (default 1953). |
+| `-q, --AvgEnd` | Last year used for averaging (default: `endYear` from the config). |
+| `-o, --oldGrid` | Uses the original 40 acre grid instead of the USG grid. |
+| `-m, --mf6Grid40` | Uses the 40 acre grid with MODFLOW 6 node numbers. |
+
+### `mfFiles`
+
+Creates MODFLOW 6 RCH and WEL files from a results database. It has no flags; it asks these questions instead:
+
+1. **Which results DB should be used?** The path to a `.sqlite` results file. Press Tab to pick from the files under
+   `OutputFiles`.
+2. **Choose WEL files to exclude** and **Choose which RCH files to exclude.** Each source you pick is written to its
+   own file and left out of the aggregate file. A steady state database only makes the aggregate RCH file, so these
+   are skipped.
+3. **Output Row-Column?** Writes row and column instead of node numbers (node is the default).
+4. **Suffix for the output file names.** For example `task3_npnrd` gives `AggregateWEL_task3_npnrd.WEL6`. Leave it
+   blank for no suffix.
+5. **Description for the file headers.** Pre-filled from the results database: a `project` scenario's description,
+   otherwise the run's.
+
+Files are written to `OutputFiles/mfFiles<timestamp>/`. Each WEL file's flow-reduction CSV is named after that file
+(`<file>_reduction.csv`).
+
+### `qcResults`
+
+Summarizes a results database for review. It has no flags; it asks which results database to use, then whether to
+write each of these:
+
+- a recharge balance for one year,
+- graphs of the results,
+- a GeoJSON file of one year of recharge results,
+- a GeoJSON file of one year of well pumping results.
+
+For the GeoJSON files it asks whether to include monthly or only annual data, and for the year-based outputs it asks
+which year. Files and a log are written to `OutputFiles/qc<timestamp>/`. The GeoJSON opens in
+[QGIS](https://qgis.org) and should also work in ESRI products.
+
+### `project`
+
+Projects pumping and recharge forward from an existing results database for the Robust Review analysis. It asks which
+results database to use. The projection starts the year after that database ends and repeats the listed years in
+order until it has covered `--ProjectYears` years.
+
+```
+EscModel project --Years "2018, 2020, 2018" --ProjectYears 50
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--Years` | **Required.** Quoted, comma separated list of years to repeat, in order. |
+| `--ProjectYears` | How many years to project forward (default 50). |
+| `--FileNames` | Name for the projection output files (default `RR`). |
+| `--Desc` | Description of the projection run (default `Robust Review Analysis`). |
+
+### Land use editing commands
+
+These change the land use tables in the PostgreSQL database directly (`<nrd>.t<year>_irr` and `<nrd>.t<year>_jct`),
+so the change applies to every later model run. `--nrd` must be `np` or `sp`.
+
+#### `parcel-delete`
+
+Deletes a parcel and all of its junction table (parcel to well) rows for one year.
+
+```
+EscModel parcel-delete --nrd np --year 2020 --id 12345
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--nrd` | **Required.** `np` or `sp`. |
+| `--id` | **Required.** Parcel ID to delete. |
+| `--year` | Land use year (default 2020). |
+
+#### `parcel-copy`
+
+Copies a parcel and its junction table rows from one year to another. If the parcel ID already exists in the target
+year, the copy gets the next free ID and the command prints it.
+
+```
+EscModel parcel-copy --nrd sp --parcel_id 12345 --year_from 2020 --year_to 2021
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--nrd` | **Required.** `np` or `sp`. |
+| `--parcel_id` | **Required.** Parcel ID to copy. |
+| `--year_from` | Year to copy from (default 2020). |
+| `--year_to` | Year to copy to (default 2021). |
+
+#### `jct-delete`
+
+Deletes one parcel to well junction record, leaving the parcel and the well in place.
+
+```
+EscModel jct-delete --nrd np --year 2020 --parcel_id 12345 --well_id 678
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--nrd` | **Required.** `np` or `sp`. |
+| `--parcel_id` | **Required.** Parcel ID of the record. |
+| `--well_id` | **Required.** Well ID of the record. |
+| `--year` | Land use year (default 2020). |
 
 ## Output
 
@@ -115,7 +251,6 @@ sub-folder per run.
   any errors into an `OutputFiles/results<timestamp>` folder.
 - `mfFiles`, `qcResults` and `project` read a results database and write their RCH, WEL, summary and GeoJSON files
   into their own time-stamped sub-folder.
-- The GeoJSON from `qcResults` opens in [QGIS](https://qgis.org) and should also work in ESRI products.
 
 ## Building from source
 
@@ -130,6 +265,27 @@ go build -o bin/esc-model .
 On Windows, install a GCC such as [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) first; see
 [windows_compile.md](windows_compile.md). The `Makefile` has `build` (macOS and Linux) and `build-win` targets for
 local builds.
+
+### Packages
+
+The model is built with Go 1.27 (toolchain `go1.27.4`). Its direct dependencies are:
+
+| Package | Version | Used for |
+| --- | --- | --- |
+| [spf13/cobra](https://github.com/spf13/cobra) | v1.10.2 | The command line commands and flags. |
+| [AlecAivazis/survey](https://github.com/AlecAivazis/survey) | v2.3.7 | The interactive questions in `mfFiles`, `qcResults` and `project`. The project is archived upstream. |
+| [pterm/pterm](https://github.com/pterm/pterm) | v0.12.84 | Coloured terminal output and progress bars. |
+| [lib/pq](https://github.com/lib/pq) | v1.12.3 | PostgreSQL driver for the WWUMM database. |
+| [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) | v1.14.53 | SQLite driver for the results databases (needs CGO). |
+| [jmoiron/sqlx](https://github.com/jmoiron/sqlx) | v1.4.0 | Query helpers on top of `database/sql`. |
+| [paulmach/orb](https://github.com/paulmach/orb) | v0.14.0 | Geometry and GeoJSON for the `qcResults` files. |
+| [longitude-103/flogo](https://bitbucket.org/longitude-103/flogo) | v0.1.20 | Writes the MODFLOW 6 WEL and RCH files. |
+| [longitude-103/gisUtils](https://bitbucket.org/longitude-103/gisutils) | v1.1.1 | Distance and inverse distance weighting for weather stations. |
+| [DATA-DOG/go-sqlmock](https://github.com/DATA-DOG/go-sqlmock) | v1.5.2 | Mock database in tests. |
+| [joho/godotenv](https://github.com/joho/godotenv) | v1.5.1 | Reads the `.env` file for database tests. |
+
+`spf13/pflag` (pulled in by cobra) is held at v1.0.10, because v1.1.0 changes the help text. To update the packages,
+run `go get -u ./...` and `go mod tidy`, then set pflag back with `go get github.com/spf13/pflag@v1.0.10`.
 
 ### Releases
 
