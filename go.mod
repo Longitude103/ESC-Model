@@ -1,6 +1,8 @@
 module github.com/Longitude103/ESC-Model
 
-go 1.26.0
+go 1.27.0
+
+toolchain go1.27.4
 
 require (
 	bitbucket.org/longitude-103/flogo v0.1.20

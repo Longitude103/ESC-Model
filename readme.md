@@ -119,7 +119,7 @@ sub-folder per run.
 
 ## Building from source
 
-You need Go 1.26 or newer and a C compiler, because the SQLite driver uses CGO.
+You need Go 1.27 or newer and a C compiler, because the SQLite driver uses CGO.
 
 ```
 git clone https://github.com/Longitude103/ESC-Model.git
