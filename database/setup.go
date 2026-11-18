@@ -33,6 +33,8 @@ type Setup struct {
 	PermRetire    bool
 	AvgSYear      int // steady state: first year averaged for CropSim and diversions
 	AvgEYear      int // steady state: last year averaged
+
+	cellNRDFracs map[int]map[int]CellNRDFraction // NRD share of each cell's area, by cell type, filled on first use
 }
 
 type Option func(*Setup)
