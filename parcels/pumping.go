@@ -76,17 +76,11 @@ func (p *Parcel) shouldEstimate(v *database.Setup) (bool, error) {
 	}
 
 	if p.Nrd == "sp" {
-		if p.Yr > 2009 {
-			return false, nil
-		} else {
-			if len(p.Subarea.String) > 0 {
-				if p.Yr > 2008 && (p.Subarea.String[2:] != "FA" || p.Subarea.String[3:] != "SPV") {
-					return false, nil
-				} else {
-					return true, nil
-				}
-			}
-		}
+		// SP metering started in 2010. 2009 was a transition year with a mix of metered and unmetered wells inside
+		// every subarea, so all parcels are estimated and DistUsage then replaces the estimate with the reported
+		// usage for the certs that were metered. (The old subarea test always passed and treated every SP parcel
+		// with a subarea as metered in 2009, and panicked on a subarea shorter than 3 characters.)
+		return p.Yr <= 2009, nil
 	}
 
 	return true, errors.New("couldn't find if it should estimate pumping, will estimate")
