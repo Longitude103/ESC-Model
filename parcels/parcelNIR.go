@@ -1,6 +1,9 @@
 package parcels
 
 import (
+	"database/sql"
+	"fmt"
+
 	"github.com/Longitude103/ESC-Model/database"
 	"github.com/Longitude103/ESC-Model/fileio"
 )
@@ -38,25 +41,25 @@ func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.Wea
 		if p.Crop1.Valid {
 			cropsNir[0], cropsRo[0], cropsDp[0], cropsEt[0] = Crop(p.Crop1.Int64, annData)
 			cropCov[0] = p.Crop1Cov.Float64
-			_, _, _, cropsDryEt[0] = Crop(p.Crop1.Int64, dryData)
+			_, _, _, cropsDryEt[0] = Crop(dryLandCrop(p.Crop1.Int64), dryData)
 		}
 
 		if p.Crop2.Valid {
 			cropsNir[1], cropsRo[1], cropsDp[1], cropsEt[1] = Crop(p.Crop2.Int64, annData)
 			cropCov[1] = p.Crop2Cov.Float64
-			_, _, _, cropsDryEt[1] = Crop(p.Crop2.Int64, dryData)
+			_, _, _, cropsDryEt[1] = Crop(dryLandCrop(p.Crop2.Int64), dryData)
 		}
 
 		if p.Crop3.Valid {
 			cropsNir[2], cropsRo[2], cropsDp[2], cropsEt[2] = Crop(p.Crop3.Int64, annData)
 			cropCov[2] = p.Crop3Cov.Float64
-			_, _, _, cropsDryEt[2] = Crop(p.Crop3.Int64, dryData)
+			_, _, _, cropsDryEt[2] = Crop(dryLandCrop(p.Crop3.Int64), dryData)
 		}
 
 		if p.Crop4.Valid {
 			cropsNir[3], cropsRo[3], cropsDp[3], cropsEt[3] = Crop(p.Crop4.Int64, annData)
 			cropCov[3] = p.Crop4Cov.Float64
-			_, _, _, cropsDryEt[3] = Crop(p.Crop4.Int64, dryData)
+			_, _, _, cropsDryEt[3] = Crop(dryLandCrop(p.Crop4.Int64), dryData)
 		}
 
 		// weight the crops based on crop_cov and weather station weight
@@ -86,6 +89,34 @@ func (p *Parcel) ParcelNIR(v *database.Setup, Year int, wStations []database.Wea
 	p.Et = parcelEt
 	p.DryEt = parcelDryEt
 
+	return nil
+}
+
+// IrrigatedPasture and Pasture are the CropSim crop codes for irrigated pasture (irrigated only) and pasture (dryland
+// only).
+const (
+	IrrigatedPasture = 12
+	Pasture          = 13
+)
+
+// dryLandCrop returns the CropSim dryland crop to compare an irrigated crop with in the WSPP ET gain. Irrigated pasture
+// has no dryland run in CropSim; its dryland form is pasture.
+func dryLandCrop(c int64) int64 {
+	if c == IrrigatedPasture {
+		return Pasture
+	}
+	return c
+}
+
+// CheckDryLandCrops returns an error if a dryland parcel has irrigated pasture (crop 12) as a crop. CropSim has no
+// dryland irrigated pasture, so the parcel would silently get no runoff or deep percolation. Dryland pasture is crop 13.
+func (p *Parcel) CheckDryLandCrops() error {
+	for _, c := range []sql.NullInt64{p.Crop1, p.Crop2, p.Crop3, p.Crop4} {
+		if c.Valid && c.Int64 == IrrigatedPasture {
+			return fmt.Errorf("dryland parcel %d (%s, %d) has irrigated pasture (crop %d); dryland pasture is crop %d",
+				p.ParcelNo, p.Nrd, p.Yr, IrrigatedPasture, Pasture)
+		}
+	}
 	return nil
 }
 
