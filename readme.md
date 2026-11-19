@@ -34,8 +34,8 @@ It is written in [Go](https://go.dev/). Pre-built binaries for Windows, macOS an
    EscModel mfFiles
    ```
 
-In these examples `EscModel` stands for the binary you downloaded, for example `wwumm-amd64-win_v1.6.15.exe` in
-PowerShell or `./wwumm-arm64-darwin_v1.6.15` in a macOS Terminal.
+In these examples `EscModel` stands for the binary you downloaded, for example `wwumm-amd64-win_v1.8.0.exe` in
+PowerShell or `./wwumm-arm64-darwin_v1.8.0` in a macOS Terminal.
 
 ## Database
 
@@ -289,9 +289,15 @@ run `go get -u ./...` and `go mod tidy`, then set pflag back with `go get github
 
 ### Releases
 
-Push a version tag (for example `git tag v1.7.0 && git push origin v1.7.0`). The Release workflow builds the Windows,
-macOS (Intel and Apple silicon) and Linux binaries on GitHub and attaches them to a new release, so nobody has to build
-on their own machine.
+1. Write the release notes for modelers in `release-notes/<tag>.md` (for example `release-notes/v1.8.0.md`) and merge
+   them to master.
+2. Push a version tag from master (for example `git tag v1.8.0 && git push origin v1.8.0`). Don't create the release by
+   hand on GitHub first.
+
+The Release workflow builds the Windows, macOS (Intel and Apple silicon) and Linux binaries on GitHub and creates the
+release with them, using the notes file. Without a notes file GitHub writes notes from the merged PRs. If the release
+already exists, the workflow only adds the binaries to it. To add binaries to an older release, run the Release
+workflow by hand from the Actions tab and give it the tag.
 
 ### Tests
 
