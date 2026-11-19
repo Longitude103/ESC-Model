@@ -2,6 +2,7 @@ package parcels
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 
 	"github.com/Longitude103/ESC-Model/fileio"
@@ -30,5 +31,29 @@ func TestCheckDryLandCrops(t *testing.T) {
 	bad := Parcel{ParcelNo: 2, Crop1: sql.NullInt64{Int64: 8, Valid: true}, Crop3: sql.NullInt64{Int64: 12, Valid: true}}
 	if err := bad.CheckDryLandCrops(); err == nil {
 		t.Error("dryland parcel with irrigated pasture should be an error")
+	}
+}
+
+func TestCheckIrrigatedCrops(t *testing.T) {
+	ok := Parcel{ParcelNo: 1, Crop1: sql.NullInt64{Int64: 12, Valid: true}}
+	if err := ok.CheckIrrigatedCrops(); err != nil {
+		t.Errorf("irrigated pasture is fine on an irrigated parcel, got %s", err)
+	}
+
+	bad := Parcel{ParcelNo: 4417, Nrd: "np", Yr: 2005, Area: 132.4, CertNum: sql.NullString{String: "A-1234", Valid: true},
+		Crop1: sql.NullInt64{Int64: 8, Valid: true}, Crop2: sql.NullInt64{Int64: 13, Valid: true}}
+	err := bad.CheckIrrigatedCrops()
+	if err == nil {
+		t.Fatal("irrigated parcel with pasture should be an error")
+	}
+	for _, want := range []string{"Parcel 4417", "NRD NP", "year 2005", "cert A-1234", "crop2", "irrigated pasture (crop 12)"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error %q should contain %q", err, want)
+		}
+	}
+
+	all := checkCrops([]Parcel{bad, ok, bad}, (*Parcel).CheckIrrigatedCrops)
+	if all == nil || strings.Count(all.Error(), "Parcel 4417") != 2 {
+		t.Errorf("checkCrops should report every bad parcel, got %v", all)
 	}
 }

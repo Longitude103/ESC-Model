@@ -55,6 +55,9 @@ func ParcelPumpSS(v *database.Setup, csResults map[string][]fileio.StationResult
 	for y := startYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Parels", y))
 		parcels = GetParcels(v, y)
+		if err := checkCrops(parcels, (*Parcel).CheckIrrigatedCrops); err != nil {
+			return nil, err
+		}
 
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Parcel NIR", y))
 		for i := 0; i < len(parcels); i++ {
