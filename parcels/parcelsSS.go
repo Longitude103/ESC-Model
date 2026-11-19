@@ -87,7 +87,8 @@ GROUP BY i.parcel_id, a.crop_int, parcel_id, crop1_cov, b.crop_int, crop2_cov, c
 
 	for i := 0; i < len(parcels); i++ {
 		parcels[i].Yr = yr
-		parcels[i].ChangeFallow()
+		// no ChangeFallow here: it maps fallow (15) to irrigated pasture (12), which only exists in CropSim as
+		// irrigated. Dryland fallow has its own CropSim dryland crop 15.
 		parcels[i].NoCropCheck()
 	}
 

@@ -26,6 +26,9 @@ func DryLandParcels(v *database.Setup, csResults map[string][]fileio.StationResu
 	for y := startYear; y < v.EYear+1; y++ {
 		p.UpdateTitle(fmt.Sprintf("Getting %d Dryland Parcels", y))
 		annDryParcels := GetDryParcels(v, y)
+		if err := checkCrops(annDryParcels, (*Parcel).CheckDryLandCrops); err != nil {
+			return nil, err
+		}
 
 		// method is used to set RO and DP, just poorly named.
 		p.UpdateTitle(fmt.Sprintf("Calculating %d Dryland Parcels return flows", y))

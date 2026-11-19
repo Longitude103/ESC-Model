@@ -125,3 +125,27 @@ func TestPumping_estimatePumpingNoEfficiency(t *testing.T) {
 		t.Error("expected an error when the parcel has no application efficiency")
 	}
 }
+
+func TestPumping_estimatePumpingSP2009(t *testing.T) {
+	v := &database.Setup{}
+	for _, tt := range []struct {
+		yr      int
+		subarea sql.NullString
+		want    bool
+	}{
+		{2008, sql.NullString{String: "FA", Valid: true}, true},
+		{2009, sql.NullString{String: "SPV", Valid: true}, true},
+		{2009, sql.NullString{String: "XX", Valid: true}, true},
+		{2009, sql.NullString{}, true},
+		{2010, sql.NullString{String: "FA", Valid: true}, false},
+	} {
+		p := parcels.Parcel{ParcelNo: 1, Nrd: "sp", Yr: tt.yr, Subarea: tt.subarea, AppEff: 0.8,
+			Gw: sql.NullBool{Valid: true, Bool: true}, Nir: [12]float64{6: 8}}
+		if err := p.EstimatePumping(v); err != nil {
+			t.Errorf("%d %q: unexpected error %s", tt.yr, tt.subarea.String, err)
+		}
+		if got := p.Pump[6] > 0; got != tt.want {
+			t.Errorf("%d %q: estimated = %t, want %t", tt.yr, tt.subarea.String, got, tt.want)
+		}
+	}
+}
