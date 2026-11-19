@@ -1,9 +1,20 @@
 name: Release
 
-# Push a tag such as v1.7.0 to build Windows, macOS and Linux binaries and attach them to a GitHub release.
+# Push a tag such as v1.8.0 to build Windows, macOS and Linux binaries and attach them to a GitHub release.
+# Release notes come from release-notes/<tag>.md when that file exists, otherwise GitHub writes them from the PRs.
+# If the release was already made by hand on GitHub, the binaries are added to it and its notes are left alone.
+# Run it by hand (Actions > Release > Run workflow) with an existing tag to add binaries to an older release.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build, such as v1.7.0"
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -33,6 +44,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.TAG }}
 
       - uses: actions/setup-go@v6
         with:
@@ -50,7 +63,7 @@ jobs:
             export CGO_CFLAGS="-arch x86_64" CGO_LDFLAGS="-arch x86_64"
           fi
           mkdir -p dist
-          go build -o "dist/${{ matrix.name }}_${GITHUB_REF_NAME}${{ matrix.ext }}" .
+          go build -o "dist/${{ matrix.name }}_${TAG}${{ matrix.ext }}" .
 
       - uses: actions/upload-artifact@v4
         with:
@@ -61,16 +74,25 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.TAG }}
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
-      - name: Create release
+      - name: Create release or add binaries to it
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          elif [ -f "release-notes/$TAG.md" ]; then
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" --notes-file "release-notes/$TAG.md" --verify-tag
+          else
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" --generate-notes --verify-tag
+          fi
